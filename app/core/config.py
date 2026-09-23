@@ -12,6 +12,8 @@ class Settings(BaseSettings):
 
     # --- Database / cache ---
     database_url: str
+    direct_database_url: str
+    
     redis_url: str = "redis://localhost:6379/0"
 
     # --- Auth ---
