@@ -10,11 +10,13 @@ class Settings(BaseSettings):
     environment: str = "development"
     api_prefix: str = "/api/v1"
 
-    # --- Database / cache ---
+    # --- Database ---
     database_url: str
-    direct_database_url: str
-    
+
+    # --- Cache / rate limiting (either a standard Redis URL, or Upstash REST credentials) ---
     redis_url: str = "redis://localhost:6379/0"
+    upstash_redis_rest_url: str | None = None
+    upstash_redis_rest_token: str | None = None
 
     # --- Auth ---
     jwt_secret: str
