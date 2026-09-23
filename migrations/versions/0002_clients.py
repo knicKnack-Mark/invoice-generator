@@ -14,7 +14,7 @@ down_revision = "0001"
 branch_labels = None
 depends_on = None
 
-client_status_enum = postgresql.ENUM("active", "inactive", "archived", name="client_status")
+client_status_enum = postgresql.ENUM("active", "inactive", "archived", name="client_status", create_type=False)
 
 
 def upgrade() -> None:

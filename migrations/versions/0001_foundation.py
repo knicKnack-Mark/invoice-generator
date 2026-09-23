@@ -15,7 +15,7 @@ branch_labels = None
 depends_on = None
 
 org_role_enum = postgresql.ENUM(
-    "owner", "admin", "manager", "member", "accountant", "client", name="org_role"
+    "owner", "admin", "manager", "member", "accountant", "client", name="org_role", create_type=False
 )
 
 

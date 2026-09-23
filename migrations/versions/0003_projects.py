@@ -15,9 +15,9 @@ branch_labels = None
 depends_on = None
 
 project_status_enum = postgresql.ENUM(
-    "active", "on_hold", "completed", "cancelled", name="project_status"
+    "active", "on_hold", "completed", "cancelled", name="project_status", create_type=False
 )
-billing_type_enum = postgresql.ENUM("hourly", "fixed", "retainer", name="project_billing_type")
+billing_type_enum = postgresql.ENUM("hourly", "fixed", "retainer", name="project_billing_type", create_type=False)
 
 
 def upgrade() -> None:
