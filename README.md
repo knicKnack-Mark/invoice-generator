@@ -136,3 +136,20 @@ fetch('/api/v1/clients', {
   body: JSON.stringify({ name: 'Acme Corp' }),
 });
 ```
+
+## Redis: Upstash REST support
+
+`app/integrations/redis_client.py` now supports two ways to connect:
+
+1. **Upstash REST API** (recommended if you're on Upstash's free tier and
+   don't want to hunt for the TCP connection string) — set
+   `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` in `.env` (both
+   values are shown directly on your Upstash database's dashboard). The app
+   detects these and uses `upstash-redis`'s async REST client automatically.
+2. **Standard Redis URL** — set `REDIS_URL` to any `redis://` or `rediss://`
+   connection string (local Redis, Upstash's TCP endpoint, or any other
+   provider). Used only if the Upstash REST vars above are not set.
+
+Both expose the same `get`/`set`/`incr`/`expire`/`delete` interface, so
+`app/middleware/rate_limit.py` and `app/integrations/login_lockout.py` work
+identically regardless of which one is active.
