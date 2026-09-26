@@ -1,6 +1,6 @@
 venv/
 .env
-app
-/app
-/app/
-app/
+app/api
+app/__pycache__
+app/core/__pycache__
+app/core
