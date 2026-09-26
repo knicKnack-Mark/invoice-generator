@@ -177,3 +177,32 @@ hashes are self-describing (the algorithm/cost/salt are embedded in the hash
 string itself), so existing hashes still verify correctly against the new
 code path. Only relevant if you'd already registered a user before hitting
 this bug, which in your case you hadn't yet.
+
+## What's new: Receipts module
+
+- `POST /api/v1/expenses/{expense_id}/receipts` — multipart file upload
+  (`file` field). Validates MIME type against `ALLOWED_UPLOAD_MIME_TYPES`,
+  size against `MAX_UPLOAD_SIZE_MB`, and sniffs the file's actual magic
+  bytes so a renamed `.exe` claiming to be `image/png` is rejected even
+  though the declared content-type lied. Migration `0006_receipts.py`.
+- `GET /api/v1/expenses/{expense_id}/receipts` — list receipts for an expense.
+- `GET /api/v1/receipts/{receipt_id}/file` — streams the file back, but only
+  after the same tenant + role check as every other endpoint. Receipts are
+  **never** served from a public static path.
+- `PATCH /api/v1/receipts/{receipt_id}` — correct vendor/date/amount/tax/
+  currency (this is what a human — or, in a later phase, OCR — would fill in
+  after reviewing the upload).
+- `DELETE /api/v1/receipts/{receipt_id}` — removes the DB row and the
+  underlying file from storage.
+- **Storage is abstracted** (`app/integrations/storage.py`) behind a
+  `StorageBackend` interface with a `LocalStorageBackend` (saves to
+  `STORAGE_LOCAL_DIR`, default `./uploads`) as the only implementation right
+  now. Swapping to S3/R2 later means adding one class implementing `save`/
+  `read`/`delete` and pointing `STORAGE_BACKEND=s3` at it — no route or
+  service code changes needed, matching §15/§59 of the spec.
+- Storage keys are random UUIDs, never derived from the user-supplied
+  filename, so there's no path-traversal surface even though the backend
+  writes directly to local disk.
+
+New `.env` variables (see `.env.example`): `STORAGE_BACKEND`,
+`STORAGE_LOCAL_DIR`, `MAX_UPLOAD_SIZE_MB`, `ALLOWED_UPLOAD_MIME_TYPES`.
