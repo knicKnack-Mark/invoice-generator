@@ -40,6 +40,16 @@ class Settings(BaseSettings):
     login_lockout_threshold: int = 5       # failed attempts before lockout
     login_lockout_minutes: int = 15        # lockout duration
 
+    # --- File storage (receipts, etc.) ---
+    storage_backend: str = "local"  # "local" now; "s3"/"r2" later without changing callers
+    storage_local_dir: str = "./uploads"
+    max_upload_size_mb: int = 10
+    allowed_upload_mime_types: str = "image/jpeg,image/png,application/pdf,image/heic"
+
+    @property
+    def allowed_upload_mime_type_list(self) -> list[str]:
+        return [t.strip() for t in self.allowed_upload_mime_types.split(",") if t.strip()]
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
