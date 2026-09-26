@@ -1,6 +1,6 @@
 venv/
 .env
-app/api
+
 app/__pycache__
 app/core/__pycache__
-app/core
+app/models/__pycache__
