@@ -1,5 +1,5 @@
 from uuid import UUID
-
+from app.repositories.expense_repository import ExpenseCategoryRepository
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import AccountLockedError, ConflictError, UnauthorizedError
@@ -23,7 +23,7 @@ class AuthService:
         self.users = UserRepository(db)
         self.orgs = OrganizationRepository(db)
         self.logs = LogRepository(db)
-
+        self.categories = ExpenseCategoryRepository(db)
     async def register(
         self, *, email: str, password: str, full_name: str, organization_name: str, ip_address: str | None = None
     ) -> tuple[AuthResponse, str]:
@@ -35,6 +35,7 @@ class AuthService:
             email=email, password_hash=hash_password(password), full_name=full_name
         )
         org = await self.orgs.create(name=organization_name, owner_user_id=user.id)
+        await self.categories.seed_defaults(organization_id=org.id)
         await self.logs.record_audit(
             organization_id=org.id, user_id=user.id, action="user.register",
             entity_type="user", entity_id=user.id, ip_address=ip_address,
