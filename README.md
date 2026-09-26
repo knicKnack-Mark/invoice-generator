@@ -153,3 +153,27 @@ fetch('/api/v1/clients', {
 Both expose the same `get`/`set`/`incr`/`expire`/`delete` interface, so
 `app/middleware/rate_limit.py` and `app/integrations/login_lockout.py` work
 identically regardless of which one is active.
+
+## Fix: passlib/bcrypt crash on register/login
+
+If you hit `ValueError: password cannot be longer than 72 bytes` (or an
+`AttributeError: module 'bcrypt' has no attribute '__about__'` right before
+it) when calling `/auth/register` or `/auth/login`, that was a known
+incompatibility between `passlib==1.7.4` (unmaintained) and newer `bcrypt`
+releases that dropped an attribute passlib's internal self-test probes for.
+It wasn't about your actual password length.
+
+Fixed by removing `passlib` entirely and calling `bcrypt` directly in
+`app/core/security.py`. If you're updating an existing install rather than
+starting fresh:
+
+```
+pip uninstall passlib
+pip install -r requirements.txt
+```
+
+This does **not** invalidate any passwords already hashed and stored — bcrypt
+hashes are self-describing (the algorithm/cost/salt are embedded in the hash
+string itself), so existing hashes still verify correctly against the new
+code path. Only relevant if you'd already registered a user before hitting
+this bug, which in your case you hadn't yet.
