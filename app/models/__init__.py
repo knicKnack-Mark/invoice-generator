@@ -6,3 +6,4 @@ from app.models.project import Project, ProjectStatus, BillingType  # noqa: F401
 from app.models.logs import ActivityLog, AuditLog  # noqa: F401
 from app.models.expense import Expense, ExpenseCategory, ExpenseStatus  # noqa: F401
 from app.models.receipt import ExpenseReceipt  # noqa: F401
+from app.models.invoice import Invoice, InvoiceItem, InvoiceExpense, InvoiceStatus  # noqa: F401
