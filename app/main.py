@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 
-from app.api.v1.router import api_router
+from app.api.v1.router import api_router, public_router
 from app.core.config import settings
 from app.core.exceptions import AppError
 from app.middleware.csrf import CSRFMiddleware
@@ -51,3 +51,4 @@ async def validation_error_handler(request: Request, exc: RequestValidationError
 
 
 app.include_router(api_router)
+app.include_router(public_router)
