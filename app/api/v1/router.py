@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1 import auth, clients, expense_categories, expenses, health, invoices, organizations, projects, receipts
+from app.api.v1 import auth, clients, expense_categories, expenses, health, invoices, organizations, payments, projects, receipts
 from app.core.config import settings
 
 api_router = APIRouter(prefix=settings.api_prefix)
@@ -13,6 +13,7 @@ api_router.include_router(expense_categories.router)
 api_router.include_router(expenses.router)
 api_router.include_router(receipts.router)
 api_router.include_router(invoices.router)
+api_router.include_router(payments.router)
 
 # Mounted separately (not under /api/v1) in app/main.py — see invoices.public_router.
 public_router = invoices.public_router
