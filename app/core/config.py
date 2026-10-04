@@ -4,15 +4,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-
-    # --- Email (dev default logs instead of sending) ---
-    email_backend: str = "console"
-    email_from_address: str = "billing@example.com"
-
-    # --- Invoices ---
-    invoice_number_prefix: str = "INV"
-    default_payment_terms_days: int = 15
-    
     # --- App identity (no hard-coded strings in routes/services) ---
     app_name: str = "VA Invoice & Expense Tracker"
     app_version: str = "0.1.0"
@@ -54,6 +45,14 @@ class Settings(BaseSettings):
     storage_local_dir: str = "./uploads"
     max_upload_size_mb: int = 10
     allowed_upload_mime_types: str = "image/jpeg,image/png,application/pdf,image/heic"
+
+    # --- Email (dev default logs instead of sending) ---
+    email_backend: str = "console"
+    email_from_address: str = "billing@example.com"
+
+    # --- Invoices ---
+    invoice_number_prefix: str = "INV"
+    default_payment_terms_days: int = 15
 
     @property
     def allowed_upload_mime_type_list(self) -> list[str]:
