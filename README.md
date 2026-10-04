@@ -206,3 +206,36 @@ this bug, which in your case you hadn't yet.
 
 New `.env` variables (see `.env.example`): `STORAGE_BACKEND`,
 `STORAGE_LOCAL_DIR`, `MAX_UPLOAD_SIZE_MB`, `ALLOWED_UPLOAD_MIME_TYPES`.
+
+## Full module list (as of this zip)
+
+| Module | Routes | Migration |
+|---|---|---|
+| Health/Ping | `/health`, `/health/db`, `/ping` | — |
+| Auth | register, login, refresh, logout, me | 0001 |
+| Organizations | list my orgs | 0001 |
+| Clients | full CRUD, soft delete | 0002 |
+| Projects | full CRUD, soft delete, client-scoped | 0003 |
+| Activity/Audit Logs | (internal, no direct routes yet) | 0004 |
+| Expenses + Categories | full CRUD, duplicate, status workflow, unbilled summary | 0005 |
+| Receipts | upload, list, download, metadata, delete | 0006 |
+| Invoices | full CRUD, send, PDF, status workflow, public link | 0007 |
+| Payments | record, list, delete, auto invoice status recalc | 0008 |
+| Dashboard | single overview endpoint, no migration (read-only) | — |
+
+49 total routes. Run `alembic upgrade head` to apply all 8 migrations in order.
+
+## Security features included
+CSRF (double-submit cookie), security headers, per-account login lockout,
+IP-based rate limiting, audit/activity logging, bcrypt password hashing,
+tenant isolation enforced at the repository layer on every query.
+
+## What's NOT built yet (next candidates)
+- Dedicated `/reports/*` endpoints with CSV/Excel export (Dashboard above
+  covers the live-view equivalent of most of this already)
+- Recurring invoices (Phase 3 in the spec)
+- Client portal / expense approval workflow (Phase 4)
+- Time tracking (Phase 4)
+- Receipt OCR (Phase 5)
+- Subscription/SaaS billing (Phase 6)
+- Frontend — nothing in Next.js exists yet; everything above is backend-only
