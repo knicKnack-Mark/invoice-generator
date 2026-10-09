@@ -4,3 +4,10 @@ venv/
 app/__pycache__
 app/core/__pycache__
 app/models/__pycache__
+pycache/
+*.py[cod]
+*$py.class
+
+venv/
+.venv/
+env/
