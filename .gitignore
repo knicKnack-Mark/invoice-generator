@@ -10,4 +10,4 @@ pycache/
 
 venv/
 .venv/
-env/
+env
