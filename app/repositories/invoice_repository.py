@@ -9,7 +9,7 @@ from sqlalchemy.orm import selectinload
 
 from app.core.config import settings
 from app.models.client import Client
-from app.models.invoice import Invoice, InvoiceExpense, InvoiceItem, InvoiceStatus
+from app.models.invoice import Invoice, InvoiceExpense, InvoiceItem, InvoiceStatus, InvoiceTimeEntry
 from app.models.organization import Organization
 
 
@@ -48,7 +48,8 @@ class InvoiceRepository:
         return f"{prefix}{count + 1:04d}"
 
     async def create(
-        self, *, organization_id: UUID, items: list[dict], expense_links: list[dict], **fields
+        self, *, organization_id: UUID, items: list[dict], expense_links: list[dict],
+        time_entry_links: list[dict] | None = None, **fields
     ) -> Invoice:
         invoice = Invoice(organization_id=organization_id, **fields)
         self.db.add(invoice)
@@ -58,12 +59,16 @@ class InvoiceRepository:
             self.db.add(InvoiceItem(invoice_id=invoice.id, sort_order=idx, **item_fields))
         for link_fields in expense_links:
             self.db.add(InvoiceExpense(invoice_id=invoice.id, **link_fields))
+        for link_fields in (time_entry_links or []):
+            self.db.add(InvoiceTimeEntry(invoice_id=invoice.id, **link_fields))
 
         await self.db.flush()
         return invoice
 
     def _base_query(self):
-        return select(Invoice).options(selectinload(Invoice.items), selectinload(Invoice.expenses))
+        return select(Invoice).options(
+            selectinload(Invoice.items), selectinload(Invoice.expenses), selectinload(Invoice.time_entries)
+        )
 
     async def get_by_id(self, *, organization_id: UUID, invoice_id: UUID) -> Invoice | None:
         result = await self.db.execute(
@@ -140,3 +145,12 @@ class InvoiceRepository:
             await self.db.delete(link)
         await self.db.flush()
         return expense_ids
+
+    async def remove_time_entry_links(self, *, invoice_id: UUID) -> list[UUID]:
+        result = await self.db.execute(select(InvoiceTimeEntry).where(InvoiceTimeEntry.invoice_id == invoice_id))
+        links = list(result.scalars().all())
+        entry_ids = [link.time_entry_id for link in links]
+        for link in links:
+            await self.db.delete(link)
+        await self.db.flush()
+        return entry_ids
