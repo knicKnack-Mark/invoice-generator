@@ -63,4 +63,11 @@ class Settings(BaseSettings):
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 
 
-settings = Settings()
+settings = Settings(
+        # --- Account tokens (password reset / email verification) ---
+    frontend_base_url: str = "http://localhost:3000"
+    password_reset_token_minutes: int = 60
+    email_verification_token_hours: int = 24
+    account_email_cooldown_seconds: int = 60
+
+)
