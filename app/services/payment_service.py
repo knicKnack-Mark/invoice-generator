@@ -11,6 +11,8 @@ from app.repositories.invoice_repository import InvoiceRepository
 from app.repositories.log_repository import LogRepository
 from app.repositories.payment_repository import PaymentRepository
 from app.schemas.payment import PaymentCreate
+from app.repositories.notification_repository import NotificationRepository
+from app.repositories.organization_repository import OrganizationRepository
 
 # Invoice statuses a payment can legally be recorded against. A draft
 # invoice hasn't been sent yet, and a cancelled one is dead — recording
@@ -24,7 +26,8 @@ class PaymentService:
         self.repo = PaymentRepository(db)
         self.invoices = InvoiceRepository(db)
         self.logs = LogRepository(db)
-
+        self.notifications = NotificationRepository(db)
+        self.orgs = OrganizationRepository(db)
     async def _recompute_invoice_status(self, *, invoice_id: UUID, organization_id: UUID) -> None:
         """Single source of truth for an invoice's amount_paid/status after
         any payment is created or deleted. Recomputed as a full sum of
@@ -79,6 +82,12 @@ class PaymentService:
             entity_type="payment", entity_id=payment.id,
             metadata={"invoice_id": str(invoice_id), "amount": str(payload.amount)},
         )
+        # In-app notification to owners/admins (spec section 31: "Payment received").
+        for member in await self.orgs.list_owners_and_admins(organization_id=organization_id):
+            await self.notifications.create(
+                organization_id=organization_id, user_id=member.user_id, type="payment.received",
+                payload={"invoice_id": str(invoice_id), "amount": str(payload.amount), "currency": payload.currency},
+            )
         await self.db.commit()
         return payment
 
