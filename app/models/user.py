@@ -16,7 +16,7 @@ class User(UUIDPKMixin, TimestampMixin, Base):
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     email_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-
+    password_changed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     memberships: Mapped[list["OrganizationMember"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
