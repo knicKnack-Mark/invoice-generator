@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from uuid import UUID
 
@@ -11,6 +11,7 @@ from app.integrations.email import email_backend
 from app.integrations.pdf import render_invoice_pdf
 from app.models.expense import Expense, ExpenseStatus
 from app.models.invoice import Invoice, InvoiceStatus, VALID_INVOICE_TRANSITIONS
+from app.models.time_entry import TimeEntry
 from app.repositories.expense_repository import ExpenseRepository
 from app.repositories.invoice_repository import InvoiceRepository
 from app.repositories.log_repository import LogRepository
@@ -59,17 +60,15 @@ class InvoiceService:
         return expenses
 
     @staticmethod
-    def calculate_totals(items: list[dict], expenses: list[Expense]) -> dict:
-        """The single source of truth for invoice money math. Never trusts
-        client-submitted totals — everything here is derived from item/expense
-        inputs using Decimal arithmetic."""
+    def calculate_totals(items: list[dict], expenses: list[Expense], time_entries: list[TimeEntry] | None = None) -> dict:
+        """Single source of truth for invoice money math. Never trusts
+        client-submitted totals; everything is derived using Decimal."""
         subtotal = Decimal("0")
         tax_total = Decimal("0")
         discount_total = Decimal("0")
 
         for item in items:
-            qty = item["quantity"]
-            line_subtotal = qty * item["unit_price"]
+            line_subtotal = item["quantity"] * item["unit_price"]
             subtotal += line_subtotal
             discount_total += item["discount"]
             tax_total += item["tax"]
@@ -82,12 +81,16 @@ class InvoiceService:
             tax_total += e.tax
             expense_links.append({"expense_id": e.id, "amount": amount})
 
-        # total is the sum of each item's already-net total (qty*price - discount + tax)
-        # plus each attached expense's amount+tax — never subtotal-discount+tax
-        # computed separately, which would double-count tax already folded into
-        # the per-item totals above.
-        total = sum((item["total"] for item in items), Decimal("0")) + sum(
-            (link["amount"] for link in expense_links), Decimal("0")
+        time_entry_links = []
+        for te in (time_entries or []):
+            amount = te.amount  # (duration_minutes / 60) * hourly_rate
+            subtotal += amount
+            time_entry_links.append({"time_entry_id": te.id, "amount": amount})
+
+        total = (
+            sum((item["total"] for item in items), Decimal("0"))
+            + sum((link["amount"] for link in expense_links), Decimal("0"))
+            + sum((link["amount"] for link in time_entry_links), Decimal("0"))
         )
 
         return {
@@ -96,7 +99,41 @@ class InvoiceService:
             "discount_total": discount_total,
             "total": total,
             "expense_links": expense_links,
+            "time_entry_links": time_entry_links,
         }
+
+    async def _load_and_validate_time_entries(
+        self, *, organization_id: UUID, client_id: UUID, time_entry_ids: list[UUID]
+    ) -> list[TimeEntry]:
+        if not time_entry_ids:
+            return []
+        result = await self.db.execute(
+            select(TimeEntry).where(
+                TimeEntry.id.in_(time_entry_ids),
+                TimeEntry.organization_id == organization_id,
+                TimeEntry.deleted_at.is_(None),
+            )
+        )
+        entries = list(result.scalars().all())
+
+        missing = set(time_entry_ids) - {e.id for e in entries}
+        if missing:
+            raise ValidationAppError(
+                f"Time entries not found in this organization: {', '.join(str(i) for i in missing)}",
+                error_code="INVALID_TIME_ENTRY",
+            )
+        for e in entries:
+            if e.client_id != client_id:
+                raise ValidationAppError(
+                    f"Time entry {e.id} does not belong to the invoice's client.", error_code="TIME_ENTRY_CLIENT_MISMATCH"
+                )
+            if not e.billable:
+                raise ValidationAppError(f"Time entry {e.id} is not marked billable.", error_code="TIME_ENTRY_NOT_BILLABLE")
+            if e.invoiced_at is not None:
+                raise ValidationAppError(
+                    f"Time entry {e.id} is already attached to another invoice.", error_code="TIME_ENTRY_ALREADY_INVOICED"
+                )
+        return entries
 
     async def create(self, *, organization_id: UUID, payload: InvoiceCreate, actor_user_id: UUID) -> Invoice:
         if not await self.repo.client_exists(organization_id=organization_id, client_id=payload.client_id):
