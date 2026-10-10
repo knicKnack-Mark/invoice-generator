@@ -45,10 +45,25 @@ def create_refresh_token(user_id: UUID) -> str:
     )
 
 
-def decode_token(token: str, expected_type: str) -> UUID:
-    """Raises JWTError (or ValueError) on any invalid/expired/wrong-type token.
-    Callers must catch and convert to a 401."""
+def decode_token_payload(token: str, expected_type: str) -> dict:
+    """Raises JWTError on any invalid/expired/wrong-type token."""
     payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
     if payload.get("type") != expected_type:
         raise JWTError("Unexpected token type")
-    return UUID(payload["sub"])
+    return payload
+
+
+def decode_token(token: str, expected_type: str) -> UUID:
+    """Raises JWTError (or ValueError) on any invalid token. Callers convert to a 401."""
+    return UUID(decode_token_payload(token, expected_type)["sub"])
+
+
+def token_issued_before(payload: dict, moment: datetime | None) -> bool:
+    """True if the token was issued before `moment` (e.g. a password change).
+    Compared in whole seconds, because JWT 'iat' has second precision."""
+    if moment is None:
+        return False
+    issued_at = payload.get("iat")
+    if issued_at is None:
+        return True
+    return int(issued_at) < int(moment.timestamp())
