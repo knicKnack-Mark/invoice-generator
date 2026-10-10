@@ -235,15 +235,23 @@ class InvoiceService:
         await self.db.commit()
         return await self.get(organization_id=organization_id, invoice_id=invoice_id)
 
-    async def _release_expenses(self, *, invoice_id: UUID) -> None:
+    async def _release_linked_items(self, *, invoice_id: UUID) -> None:
+        """Releases attached expenses AND time entries back to unbilled, used
+        when a draft is deleted or an invoice is cancelled."""
         expense_ids = await self.repo.remove_expense_links(invoice_id=invoice_id)
-        if not expense_ids:
-            return
-        result = await self.db.execute(select(Expense).where(Expense.id.in_(expense_ids)))
-        for e in result.scalars().all():
-            e.invoiced_at = None
-            if e.status == ExpenseStatus.billed:
-                e.status = ExpenseStatus.approved
+        if expense_ids:
+            result = await self.db.execute(select(Expense).where(Expense.id.in_(expense_ids)))
+            for e in result.scalars().all():
+                e.invoiced_at = None
+                if e.status == ExpenseStatus.billed:
+                    e.status = ExpenseStatus.approved
+
+        time_entry_ids = await self.repo.remove_time_entry_links(invoice_id=invoice_id)
+        if time_entry_ids:
+            result = await self.db.execute(select(TimeEntry).where(TimeEntry.id.in_(time_entry_ids)))
+            for te in result.scalars().all():
+                te.invoiced_at = None
+
         await self.db.flush()
 
     async def change_status(
@@ -259,7 +267,7 @@ class InvoiceService:
             )
 
         if target == InvoiceStatus.cancelled:
-            await self._release_expenses(invoice_id=invoice.id)
+            await self._release_linked_items(invoice_id=invoice.id)
 
         invoice = await self.repo.set_status(invoice, target)
 
@@ -294,7 +302,7 @@ class InvoiceService:
         invoice = await self.get(organization_id=organization_id, invoice_id=invoice_id)
         if invoice.status != InvoiceStatus.draft:
             raise ValidationAppError("Only draft invoices can be deleted.", error_code="INVOICE_NOT_DELETABLE")
-        await self._release_expenses(invoice_id=invoice.id)
+        await self._release_linked_items(invoice_id=invoice.id)
         await self.repo.soft_delete(invoice)
         await self.logs.record_audit(
             organization_id=organization_id, user_id=actor_user_id, action="invoice.deleted",
