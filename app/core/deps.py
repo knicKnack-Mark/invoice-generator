@@ -11,7 +11,7 @@ from app.models.organization import OrganizationMember
 from app.models.user import User
 from app.repositories.organization_repository import OrganizationRepository
 from app.repositories.user_repository import UserRepository
-
+from app.core.security import decode_token_payload, token_issued_before
 
 async def get_current_user(
     access_token: str | None = Cookie(default=None),
@@ -20,15 +20,15 @@ async def get_current_user(
     if not access_token:
         raise UnauthorizedError("Not authenticated.", error_code="NOT_AUTHENTICATED")
     try:
-        user_id = decode_token(access_token, expected_type="access")
-    except (JWTError, ValueError):
+        payload = decode_token_payload(access_token, expected_type="access")
+        user_id = UUID(payload["sub"])
+    except (JWTError, ValueError, KeyError):
         raise UnauthorizedError("Invalid or expired session.", error_code="INVALID_TOKEN")
 
     user = await UserRepository(db).get_by_id(user_id)
-    if not user or not user.is_active:
+    if not user or not user.is_active or token_issued_before(payload, user.password_changed_at):
         raise UnauthorizedError("Invalid or expired session.", error_code="INVALID_TOKEN")
     return user
-
 
 async def get_current_membership(
     x_organization_id: UUID = Header(..., alias="X-Organization-Id"),
