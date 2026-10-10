@@ -34,6 +34,9 @@ def render_invoice_pdf(*, invoice, client_name: str) -> bytes:
     for exp_link in invoice.expenses:
         table_data.append(["Expense (attached)", "1", f"{exp_link.amount:.2f}", "0.00", "0.00", f"{exp_link.amount:.2f}"])
 
+    for time_link in getattr(invoice, "time_entries", []):
+        table_data.append(["Time (attached)", "1", f"{time_link.amount:.2f}", "0.00", "0.00", f"{time_link.amount:.2f}"])
+
     table = Table(table_data, colWidths=[2.4 * inch, 0.6 * inch, 1 * inch, 0.8 * inch, 0.7 * inch, 1 * inch])
     table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2d2d2d")),
