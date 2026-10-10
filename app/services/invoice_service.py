@@ -16,7 +16,8 @@ from app.repositories.expense_repository import ExpenseRepository
 from app.repositories.invoice_repository import InvoiceRepository
 from app.repositories.log_repository import LogRepository
 from app.schemas.invoice import InvoiceCreate, InvoiceUpdate, PublicInvoiceOut
-
+from app.repositories.notification_repository import NotificationRepository
+from app.repositories.organization_repository import OrganizationRepository
 
 class InvoiceService:
     def __init__(self, db: AsyncSession):
@@ -24,7 +25,8 @@ class InvoiceService:
         self.repo = InvoiceRepository(db)
         self.expenses = ExpenseRepository(db)
         self.logs = LogRepository(db)
-
+        self.notifications = NotificationRepository(db)
+        self.orgs = OrganizationRepository(db)
     async def _load_and_validate_expenses(
         self, *, organization_id: UUID, client_id: UUID, expense_ids: list[UUID]
     ) -> list[Expense]:
@@ -199,6 +201,11 @@ class InvoiceService:
                 organization_id=invoice.organization_id, user_id=None, action="invoice.viewed",
                 entity_type="invoice", entity_id=invoice.id,
             )
+            for member in await self.orgs.list_owners_and_admins(organization_id=invoice.organization_id):
+                await self.notifications.create(
+                    organization_id=invoice.organization_id, user_id=member.user_id, type="invoice.viewed",
+                    payload={"invoice_id": str(invoice.id), "invoice_number": invoice.invoice_number},
+                )
             await self.db.commit()
 
         client_name = await self.repo.get_client_name(client_id=invoice.client_id) or ""
