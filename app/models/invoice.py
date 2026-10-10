@@ -70,7 +70,7 @@ class Invoice(UUIDPKMixin, TimestampMixin, Base):
         back_populates="invoice", cascade="all, delete-orphan", order_by="InvoiceItem.sort_order"
     )
     expenses: Mapped[list["InvoiceExpense"]] = relationship(back_populates="invoice", cascade="all, delete-orphan")
-
+    time_entries: Mapped[list["InvoiceTimeEntry"]] = relationship(back_populates="invoice", cascade="all, delete-orphan")
     @property
     def is_overdue(self) -> bool:
         return (
@@ -112,3 +112,16 @@ class InvoiceExpense(UUIDPKMixin, Base):
     amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
 
     invoice: Mapped["Invoice"] = relationship(back_populates="expenses")
+
+class InvoiceTimeEntry(UUIDPKMixin, Base):
+    __tablename__ = "invoice_time_entries"
+
+    invoice_id: Mapped[uuid.UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("invoices.id", ondelete="CASCADE"), nullable=False
+    )
+    time_entry_id: Mapped[uuid.UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("time_entries.id", ondelete="RESTRICT"), nullable=False
+    )
+    amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+
+    invoice: Mapped["Invoice"] = relationship(back_populates="time_entries")
