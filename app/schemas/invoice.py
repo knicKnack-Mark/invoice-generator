@@ -33,6 +33,12 @@ class InvoiceExpenseOut(BaseModel):
 
     model_config = {"from_attributes": True}
 
+class InvoiceTimeEntryOut(BaseModel):
+    id: UUID
+    time_entry_id: UUID
+    amount: Decimal
+
+    model_config = {"from_attributes": True}
 
 class InvoiceCreate(BaseModel):
     client_id: UUID
@@ -43,6 +49,7 @@ class InvoiceCreate(BaseModel):
     terms: str | None = None
     items: list[InvoiceItemCreate] = Field(default_factory=list)
     expense_ids: list[UUID] = Field(default_factory=list)
+    time_entry_ids: list[UUID] = Field(default_factory=list)
 
     @field_validator("currency")
     @classmethod
@@ -87,7 +94,8 @@ class InvoiceOut(BaseModel):
     updated_at: datetime
     items: list[InvoiceItemOut] = []
     expenses: list[InvoiceExpenseOut] = []
-
+    time_entries: list[InvoiceTimeEntryOut] = []
+    
     model_config = {"from_attributes": True}
 
 
@@ -108,5 +116,7 @@ class PublicInvoiceOut(BaseModel):
     is_overdue: bool
     terms: str | None
     items: list[InvoiceItemOut] = []
+    expenses: list[InvoiceExpenseOut] = []
+    time_entries: list[InvoiceTimeEntryOut] = []
     client_name: str
     organization_name: str
