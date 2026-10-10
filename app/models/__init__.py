@@ -10,3 +10,4 @@ from app.models.invoice import Invoice, InvoiceItem, InvoiceExpense, InvoiceStat
 from app.models.payment import Payment, PaymentMethod  # noqa: F401
 from app.models.settings import OrganizationSettings  # noqa: F401
 from app.models.time_entry import TimeEntry  # noqa: F401
+from app.models.recurring_invoice import RecurringInvoice, RecurringInvoiceItem, RecurringFrequency  # noqa: F401
