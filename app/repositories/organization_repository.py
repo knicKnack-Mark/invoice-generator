@@ -50,6 +50,16 @@ class OrganizationRepository:
         )
         return result.scalar_one_or_none()
 
+    async def list_owners_and_admins(self, *, organization_id: UUID) -> list[OrganizationMember]:
+        result = await self.db.execute(
+            select(OrganizationMember).where(
+                OrganizationMember.organization_id == organization_id,
+                OrganizationMember.role.in_([OrgRole.owner, OrgRole.admin]),
+                OrganizationMember.status == "active",
+            )
+        )
+        return list(result.scalars().all())
+        
     async def list_for_user(self, user_id: UUID) -> list[tuple[Organization, OrganizationMember]]:
         result = await self.db.execute(
             select(Organization, OrganizationMember)
