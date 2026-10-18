@@ -13,6 +13,7 @@ from app.core.exceptions import AppError, ConflictError, UnauthorizedError
 from app.core.security import hash_password, verify_password
 from app.integrations import login_lockout
 from app.integrations.email import email_backend
+from app.integrations.email_templates import password_reset_email
 from app.integrations.storage import storage_backend
 from app.models.auth_token import PURPOSE_EMAIL_VERIFICATION, PURPOSE_PASSWORD_RESET
 from app.models.expense import Expense
@@ -127,15 +128,14 @@ class AccountService:
         )
         await self.db.commit()
 
-        link = f"{settings.frontend_base_url}/reset-password?token={raw}"
+        link = f"{settings.frontend_base_url}/auth/reset-password?token={raw}"
         await self._send_safely(
             to=user.email,
             subject=f"Reset your {settings.app_name} password",
-            html_body=(
-                f"<p>We received a request to reset your {escape(settings.app_name)} password.</p>"
-                f'<p><a href="{link}">Reset my password</a></p>'
-                f"<p>This link expires in {settings.password_reset_token_minutes} minutes. "
-                "If you didn't request this, you can safely ignore this email.</p>"
+            html_body=password_reset_email(
+                app_name=settings.app_name,
+                reset_url=link,
+                expiry_minutes=settings.password_reset_token_minutes,
             ),
         )
 
