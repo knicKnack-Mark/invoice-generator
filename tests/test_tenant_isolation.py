@@ -298,7 +298,7 @@ async def test_dashboard_shows_nothing_of_a_to_b(tenants):
     assert Decimal(str(control["unbilled_expenses"])) == 25
 
     r = await b.call("GET", "/dashboard")
-    assert_nothing_of_a(r, b if False else a)
+    assert_nothing_of_a(r, a)
     totals = r.json()["totals"]
     for key in ("total_revenue", "outstanding_invoices", "overdue_invoices",
                 "expenses_this_month", "billable_expenses", "unbilled_expenses"):
