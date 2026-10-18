@@ -109,7 +109,7 @@ async def change_expense_status(
 ):
     return await ExpenseService(db).update_status(
         organization_id=membership.organization_id, expense_id=expense_id,
-        new_status=payload.status, actor_user_id=current_user.id,
+        new_status=payload.status, actor_user_id=current_user.id, actor_role=membership.role.value,
     )
 
 
