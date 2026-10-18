@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    # --- App identity (no hard-coded strings in routes/services) ---
+    # --- App identity ---
     app_name: str = "VA Invoice & Expense Tracker"
     app_version: str = "0.1.0"
     environment: str = "development"
@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     # --- Database ---
     database_url: str
 
-    # --- Cache / rate limiting (either a standard Redis URL, or Upstash REST credentials) ---
+    # --- Cache / rate limiting (standard Redis URL, or Upstash REST credentials) ---
     redis_url: str = "redis://localhost:6379/0"
     upstash_redis_rest_url: str | None = None
     upstash_redis_rest_token: str | None = None
@@ -27,26 +27,26 @@ class Settings(BaseSettings):
     # --- CORS ---
     cors_origins: str = "http://localhost:3000"
 
-    # --- Pagination defaults (centralized so no endpoint hard-codes these) ---
+    # --- Pagination ---
     default_page_size: int = 25
     max_page_size: int = 100
 
     # --- Rate limiting ---
     rate_limit_enabled: bool = True
     rate_limit_per_minute: int = 60
-    rate_limit_auth_per_minute: int = 10  # stricter limit for login/register
+    rate_limit_auth_per_minute: int = 10
 
-    # --- Account lockout (per-account, distinct from IP-based rate limiting) ---
-    login_lockout_threshold: int = 5       # failed attempts before lockout
-    login_lockout_minutes: int = 15        # lockout duration
+    # --- Account lockout ---
+    login_lockout_threshold: int = 5
+    login_lockout_minutes: int = 15
 
-    # --- File storage (receipts, etc.) ---
-    storage_backend: str = "local"  # "local" now; "s3"/"r2" later without changing callers
+    # --- File storage ---
+    storage_backend: str = "local"
     storage_local_dir: str = "./uploads"
     max_upload_size_mb: int = 10
     allowed_upload_mime_types: str = "image/jpeg,image/png,application/pdf,image/heic"
 
-    # --- Email (dev default logs instead of sending) ---
+    # --- Email ---
     email_backend: str = "console"
     email_from_address: str = "billing@example.com"
 
@@ -54,20 +54,19 @@ class Settings(BaseSettings):
     invoice_number_prefix: str = "INV"
     default_payment_terms_days: int = 15
 
-    @property
-    def allowed_upload_mime_type_list(self) -> list[str]:
-        return [t.strip() for t in self.allowed_upload_mime_types.split(",") if t.strip()]
-
-    @property
-    def cors_origin_list(self) -> list[str]:
-        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
-
-
-settings = Settings(
-        # --- Account tokens (password reset / email verification) ---
+    # --- Account tokens (password reset / email verification) ---
     frontend_base_url: str = "http://localhost:3000"
     password_reset_token_minutes: int = 60
     email_verification_token_hours: int = 24
     account_email_cooldown_seconds: int = 60
 
-)
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+
+    @property
+    def allowed_upload_mime_type_list(self) -> list[str]:
+        return [t.strip() for t in self.allowed_upload_mime_types.split(",") if t.strip()]
+
+
+settings = Settings()
