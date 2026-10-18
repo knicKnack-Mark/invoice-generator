@@ -43,12 +43,18 @@ class Settings(BaseSettings):
     # --- File storage ---
     storage_backend: str = "local"
     storage_local_dir: str = "./uploads"
+    storage_bucket: str | None = None
+    storage_region: str = "us-east-1"
+    storage_endpoint_url: str | None = None
+    storage_access_key_id: str | None = None
+    storage_secret_access_key: str | None = None
     max_upload_size_mb: int = 10
     allowed_upload_mime_types: str = "image/jpeg,image/png,application/pdf,image/heic"
 
     # --- Email ---
     email_backend: str = "console"
     email_from_address: str = "billing@example.com"
+    resend_api_key: str | None = None
 
     # --- Invoices ---
     invoice_number_prefix: str = "INV"
