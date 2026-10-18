@@ -1,4 +1,5 @@
 import secrets
+from uuid import UUID
 
 from fastapi import APIRouter, Cookie, Depends, Request, Response
 from jose import JWTError
@@ -7,12 +8,27 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.deps import get_current_user
 from app.core.exceptions import UnauthorizedError
-from app.core.security import decode_token
+from app.core.security import (
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+    decode_token_payload,
+)
 from app.middleware.csrf import CSRF_COOKIE_NAME
 from app.models.base import get_db
 from app.models.user import User
 from app.repositories.log_repository import LogRepository
-from app.schemas.auth import AuthResponse, LoginRequest, RegisterRequest, UserOut
+from app.schemas.auth import (
+    AuthResponse,
+    ChangePasswordRequest,
+    ForgotPasswordRequest,
+    LoginRequest,
+    RegisterRequest,
+    ResetPasswordRequest,
+    UserOut,
+    VerifyEmailRequest,
+)
+from app.services.account_service import AccountService
 from app.services.auth_service import AuthService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -73,14 +89,14 @@ async def refresh(
     if not refresh_token:
         raise UnauthorizedError("No refresh token provided.", error_code="NOT_AUTHENTICATED")
     try:
-        user_id = decode_token(refresh_token, expected_type="refresh")
-    except (JWTError, ValueError):
+        payload = decode_token_payload(refresh_token, expected_type="refresh")
+        user_id = UUID(payload["sub"])
+    except (JWTError, ValueError, KeyError):
         raise UnauthorizedError("Invalid or expired refresh token.", error_code="INVALID_TOKEN")
 
-    auth_response, new_refresh_token = await AuthService(db).refresh(user_id)
+    auth_response, new_refresh_token = await AuthService(db).refresh(user_id, token_payload=payload)
     _set_auth_cookies(response, auth_response.access_token, new_refresh_token)
     return auth_response
-
 
 @router.post("/logout")
 async def logout(
@@ -113,3 +129,69 @@ async def logout(
 @router.get("/me", response_model=UserOut)
 async def me(current_user: User = Depends(get_current_user)):
     return current_user
+
+def _client_ip(request: Request) -> str | None:
+    return request.client.host if request.client else None
+
+
+@router.post("/forgot-password")
+async def forgot_password(
+    payload: ForgotPasswordRequest, request: Request, db: AsyncSession = Depends(get_db)
+):
+    await AccountService(db).request_password_reset(email=payload.email, ip_address=_client_ip(request))
+    # Same response whether or not the account exists.
+    return {
+        "success": True,
+        "data": {"message": "If an account exists for that email, a reset link has been sent."},
+    }
+
+
+@router.post("/reset-password")
+async def reset_password(
+    payload: ResetPasswordRequest,
+    request: Request,
+    response: Response,
+    db: AsyncSession = Depends(get_db),
+):
+    await AccountService(db).reset_password(
+        token=payload.token, new_password=payload.new_password, ip_address=_client_ip(request)
+    )
+    response.delete_cookie(ACCESS_COOKIE)
+    response.delete_cookie(REFRESH_COOKIE)
+    response.delete_cookie(CSRF_COOKIE_NAME)
+    return {"success": True, "data": {"message": "Password updated. Please log in with your new password."}}
+
+
+@router.post("/change-password")
+async def change_password(
+    payload: ChangePasswordRequest,
+    request: Request,
+    response: Response,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await AccountService(db).change_password(
+        user=current_user, current_password=payload.current_password,
+        new_password=payload.new_password, ip_address=_client_ip(request),
+    )
+    # Every older session was just invalidated; give this one fresh tokens so the user stays logged in.
+    _set_auth_cookies(response, create_access_token(current_user.id), create_refresh_token(current_user.id))
+    return {"success": True, "data": {"message": "Password changed."}}
+
+
+@router.post("/verify-email/request")
+async def request_email_verification(
+    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+):
+    if current_user.email_verified_at is not None:
+        return {"success": True, "data": {"message": "Your email is already verified."}}
+    await AccountService(db).send_verification_email(user=current_user, enforce_cooldown=True)
+    return {"success": True, "data": {"message": "Verification email sent."}}
+
+
+@router.post("/verify-email/confirm")
+async def confirm_email(
+    payload: VerifyEmailRequest, request: Request, db: AsyncSession = Depends(get_db)
+):
+    await AccountService(db).confirm_email(token=payload.token, ip_address=_client_ip(request))
+    return {"success": True, "data": {"message": "Email verified."}}
