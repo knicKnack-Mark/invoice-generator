@@ -8,7 +8,14 @@ from app.core.config import settings
 from app.integrations.redis_client import redis_client
 
 # Paths that get a stricter limit (brute-force sensitive).
-_STRICT_PREFIXES = ("/api/v1/auth/login", "/api/v1/auth/register")
+_STRICT_PREFIXES = (
+    "/api/v1/auth/login",
+    "/api/v1/auth/register",
+    "/api/v1/auth/forgot-password",
+    "/api/v1/auth/reset-password",
+    "/api/v1/auth/change-password",
+    "/api/v1/auth/verify-email",
+)
 # Paths excluded entirely (cheap, high-frequency, no sensitive data).
 _EXEMPT_PATHS = ("/api/v1/health", "/api/v1/health/db", "/api/v1/ping")
 
