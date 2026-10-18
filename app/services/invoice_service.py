@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.exceptions import NotFoundError, ValidationAppError
 from app.integrations.email import email_backend
+from app.integrations.email_templates import invoice_email
 from app.integrations.pdf import render_invoice_pdf
 from app.integrations.storage import storage_backend
 from app.models.expense import Expense, ExpenseStatus
@@ -300,20 +301,21 @@ class InvoiceService:
                 f"Cannot move invoice from '{invoice.status.value}' to '{target.value}'.",
                 error_code="INVALID_STATUS_TRANSITION",
             )
-        client_email = await self.repo.get_client_email(
+        client = await self.repo.get_client(
             organization_id=organization_id, client_id=invoice.client_id
         )
-        if not client_email:
+        if not client or not client.email:
             raise ValidationAppError(
                 "Add an email address to this client before sending an invoice.",
                 error_code="CLIENT_EMAIL_REQUIRED",
             )
-        client_name = await self.repo.get_client_name(client_id=invoice.client_id) or "Client"
         pdf_bytes = await self._render_invoice_pdf(
             invoice=invoice,
             organization_id=organization_id,
-            client_name=client_name,
+            client_name=client.name,
         )
+        profile = await self.settings_repo.get(organization_id=organization_id)
+        organization_name = await self.repo.get_organization_name(organization_id=organization_id) or "Business"
         previous_status = invoice.status
         invoice = await self.repo.set_status(invoice, target)
         await self.logs.record_activity(
@@ -325,9 +327,18 @@ class InvoiceService:
             metadata={"from": previous_status.value, "to": target.value},
         )
         await email_backend.send(
-            to=client_email,
-            subject=f"Invoice {invoice.invoice_number}",
-            html_body=f"<p>Please find attached invoice {invoice.invoice_number}, total {invoice.currency} {invoice.total}.</p>",
+            to=client.email,
+            from_name=getattr(profile, "business_name", None) or organization_name,
+            subject=(
+                f"Invoice {invoice.invoice_number} from "
+                f"{getattr(profile, 'business_name', None) or organization_name}"
+            ),
+            html_body=invoice_email(
+                invoice=invoice,
+                client=client,
+                organization_name=organization_name,
+                profile=profile,
+            ),
             attachments=[(f"{invoice.invoice_number}.pdf", pdf_bytes, "application/pdf")],
         )
         await self.db.commit()
