@@ -95,7 +95,9 @@ async def refresh(
     except (JWTError, ValueError, KeyError):
         raise UnauthorizedError("Invalid or expired refresh token.", error_code="INVALID_TOKEN")
 
-    auth_response, new_refresh_token = await AuthService(db).refresh(user_id, token_payload=payload)
+    auth_response, new_refresh_token = await AuthService(db).refresh(
+        user_id, refresh_token=refresh_token, token_payload=payload
+    )
     _set_auth_cookies(response, auth_response.access_token, new_refresh_token)
     return auth_response
 
@@ -104,8 +106,12 @@ async def logout(
     request: Request,
     response: Response,
     access_token: str | None = Cookie(default=None),
+    refresh_token: str | None = Cookie(default=None),
     db: AsyncSession = Depends(get_db),
 ):
+    if refresh_token:
+        await AuthService(db).revoke_refresh_token(refresh_token)
+
     # Best-effort audit log: only written if the access token is still valid;
     # an already-expired/invalid token still logs out cleanly (cookies cleared)
     # without raising, since logout should never fail for the user.
