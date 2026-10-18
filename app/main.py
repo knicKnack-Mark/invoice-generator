@@ -8,12 +8,14 @@ from app.core.config import settings
 from app.core.exceptions import AppError
 from app.middleware.csrf import CSRFMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
+from app.middleware.request_logging import RequestLoggingMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
 
 app = FastAPI(title=f"{settings.app_name} API", version=settings.app_version)
 
 # Middleware order (Starlette wraps last-added as outermost):
-#   SecurityHeaders (outermost — decorates every response, even rejections)
+#   RequestLogging (outermost — records every request result)
+#   -> SecurityHeaders (decorates every response, even rejections)
 #   -> CSRF          (blocks forged state-changing requests)
 #   -> RateLimit      (blocks abusive traffic)
 #   -> CORS           (innermost, closest to route handling)
@@ -27,6 +29,7 @@ app.add_middleware(
 app.add_middleware(RateLimitMiddleware)
 app.add_middleware(CSRFMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RequestLoggingMiddleware)
 
 
 @app.exception_handler(AppError)
