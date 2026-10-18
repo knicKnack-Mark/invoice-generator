@@ -3,7 +3,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.exceptions import NotFoundError, ValidationAppError
+from app.core.exceptions import ForbiddenError, NotFoundError, ValidationAppError
 from app.models.time_entry import TimeEntry
 from app.repositories.client_repository import ClientRepository
 from app.repositories.expense_repository import ExpenseRepository
@@ -50,8 +50,12 @@ class TimeEntryService:
         page_size = min(max(page_size, 1), settings.max_page_size)
         return await self.repo.list(organization_id=organization_id, page=page, page_size=page_size, **filters)
 
-    async def update(self, *, organization_id: UUID, entry_id: UUID, payload: TimeEntryUpdate, actor_user_id: UUID) -> TimeEntry:
+    async def update(
+        self, *, organization_id: UUID, entry_id: UUID, payload: TimeEntryUpdate,
+        actor_user_id: UUID, actor_role: str,
+    ) -> TimeEntry:
         entry = await self.get(organization_id=organization_id, entry_id=entry_id)
+        self._ensure_can_manage_entry(entry=entry, actor_user_id=actor_user_id, actor_role=actor_role)
         if entry.invoiced_at is not None:
             raise ValidationAppError("This time entry is already invoiced and can no longer be edited.", error_code="TIME_ENTRY_LOCKED")
 
@@ -70,8 +74,11 @@ class TimeEntryService:
         await self.db.commit()
         return entry
 
-    async def delete(self, *, organization_id: UUID, entry_id: UUID, actor_user_id: UUID) -> None:
+    async def delete(
+        self, *, organization_id: UUID, entry_id: UUID, actor_user_id: UUID, actor_role: str
+    ) -> None:
         entry = await self.get(organization_id=organization_id, entry_id=entry_id)
+        self._ensure_can_manage_entry(entry=entry, actor_user_id=actor_user_id, actor_role=actor_role)
         if entry.invoiced_at is not None:
             raise ValidationAppError("This time entry is already invoiced and cannot be deleted.", error_code="TIME_ENTRY_LOCKED")
         await self.repo.soft_delete(entry)
@@ -80,3 +87,11 @@ class TimeEntryService:
             entity_type="time_entry", entity_id=entry_id,
         )
         await self.db.commit()
+
+    @staticmethod
+    def _ensure_can_manage_entry(*, entry: TimeEntry, actor_user_id: UUID, actor_role: str) -> None:
+        if actor_role == "member" and entry.user_id != actor_user_id:
+            raise ForbiddenError(
+                "Members can only modify or delete their own time entries.",
+                error_code="INSUFFICIENT_ROLE",
+            )

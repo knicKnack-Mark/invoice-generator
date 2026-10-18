@@ -4,7 +4,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.exceptions import NotFoundError, ValidationAppError
+from app.core.exceptions import ForbiddenError, NotFoundError, ValidationAppError
 from app.models.expense import Expense, ExpenseStatus, VALID_STATUS_TRANSITIONS
 from app.repositories.expense_repository import ExpenseCategoryRepository, ExpenseRepository
 from app.repositories.log_repository import LogRepository
@@ -127,10 +127,16 @@ class ExpenseService:
         return expense
 
     async def update_status(
-        self, *, organization_id: UUID, expense_id: UUID, new_status: str, actor_user_id: UUID
+        self, *, organization_id: UUID, expense_id: UUID, new_status: str, actor_user_id: UUID,
+        actor_role: str,
     ) -> Expense:
         expense = await self.get(organization_id=organization_id, expense_id=expense_id)
         target = ExpenseStatus(new_status)
+        if target == ExpenseStatus.approved and actor_role == "member":
+            raise ForbiddenError(
+                "Only an owner, admin, or manager can approve expenses.",
+                error_code="INSUFFICIENT_ROLE",
+            )
         allowed = VALID_STATUS_TRANSITIONS.get(expense.status, set())
         if target not in allowed:
             raise ValidationAppError(
