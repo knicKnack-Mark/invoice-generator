@@ -4,11 +4,13 @@ import os
 os.environ["RATE_LIMIT_ENABLED"] = "false"   # the tests send far more than 60 requests/minute
 os.environ["ENVIRONMENT"] = "development"    # secure cookies would never be sent back over http://
 os.environ["STORAGE_LOCAL_DIR"] = "./.test_uploads"
-os.environ.setdefault("JWT_SECRET", "test-secret")
+
 if os.environ.get("TEST_DATABASE_URL"):
     os.environ["DATABASE_URL"] = os.environ["TEST_DATABASE_URL"]
-else:
+elif not os.path.exists(".env"):
+    # No .env found (run pytest from the backend/ folder so it's picked up).
     os.environ.setdefault("DATABASE_URL", "postgresql+asyncpg://user:pass@localhost/test")
+    os.environ.setdefault("JWT_SECRET", "test-secret")
 
 import pytest
 from httpx import ASGITransport, AsyncClient
