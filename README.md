@@ -35,12 +35,10 @@
 - Consistent `{success, data|message, error_code}` response envelope and
   centralized exception handling in `app/main.py`
 
-## Not included yet (later phases)
+## Initial foundation scope
 
-Email verification / password reset emails, 2FA, rate limiting, clients,
-projects, expenses, receipts, invoices, payments — these follow the same
-model → migration → schema → repository → service → routes → tests pattern
-already established here.
+The first foundation slice started with core authentication and organizations.
+The modules and launch-readiness features added later are described below.
 
 ## What's new in this update
 
@@ -196,23 +194,27 @@ this bug, which in your case you hadn't yet.
   underlying file from storage.
 - **Storage is abstracted** (`app/integrations/storage.py`) behind a
   `StorageBackend` interface with a `LocalStorageBackend` (saves to
-  `STORAGE_LOCAL_DIR`, default `./uploads`) as the only implementation right
-  now. Swapping to S3/R2 later means adding one class implementing `save`/
-  `read`/`delete` and pointing `STORAGE_BACKEND=s3` at it — no route or
-  service code changes needed, matching §15/§59 of the spec.
+  `STORAGE_LOCAL_DIR`, default `./uploads`) and an S3-compatible backend for
+  AWS S3 or Cloudflare R2. Set `STORAGE_BACKEND=s3` for AWS or `r2` for R2,
+  then configure `STORAGE_BUCKET`, `STORAGE_REGION`, and credentials; R2 also
+  requires `STORAGE_ENDPOINT_URL`. Receipt and business-logo objects remain
+  private and are served only through authenticated app workflows.
 - Storage keys are random UUIDs, never derived from the user-supplied
   filename, so there's no path-traversal surface even though the backend
   writes directly to local disk.
 
 New `.env` variables (see `.env.example`): `STORAGE_BACKEND`,
-`STORAGE_LOCAL_DIR`, `MAX_UPLOAD_SIZE_MB`, `ALLOWED_UPLOAD_MIME_TYPES`.
+`STORAGE_LOCAL_DIR`, `STORAGE_BUCKET`, `STORAGE_REGION`,
+`STORAGE_ENDPOINT_URL`, `STORAGE_ACCESS_KEY_ID`,
+`STORAGE_SECRET_ACCESS_KEY`, `MAX_UPLOAD_SIZE_MB`,
+`ALLOWED_UPLOAD_MIME_TYPES`.
 
 ## Full module list (as of this zip)
 
 | Module | Routes | Migration |
 |---|---|---|
 | Health/Ping | `/health`, `/health/db`, `/ping` | — |
-| Auth | register, login, refresh, logout, me | 0001 |
+| Auth | register, login, refresh, logout, me, account deletion | 0001, 0010 |
 | Organizations | list my orgs | 0001 |
 | Clients | full CRUD, soft delete | 0002 |
 | Projects | full CRUD, soft delete, client-scoped | 0003 |
@@ -222,8 +224,9 @@ New `.env` variables (see `.env.example`): `STORAGE_BACKEND`,
 | Invoices | full CRUD, send, PDF, status workflow, public link | 0007 |
 | Payments | record, list, delete, auto invoice status recalc | 0008 |
 | Dashboard | single overview endpoint, no migration (read-only) | — |
+| Organization settings | business profile, invoice templates, private logo | 0011 |
 
-49 total routes. Run `alembic upgrade head` to apply all 8 migrations in order.
+Run `alembic upgrade head` to apply all migrations in order.
 
 ## Security features included
 CSRF (double-submit cookie), security headers, per-account login lockout,
@@ -239,3 +242,19 @@ tenant isolation enforced at the repository layer on every query.
 - Receipt OCR (Phase 5)
 - Subscription/SaaS billing (Phase 6)
 - Frontend — nothing in Next.js exists yet; everything above is backend-only
+
+## Launch-readiness features
+
+- **Email:** set `EMAIL_BACKEND=resend`, `RESEND_API_KEY`, and a verified
+  `EMAIL_FROM_ADDRESS` to send verification, password-reset, and invoice emails
+  with Resend. `EMAIL_BACKEND=console` remains available for development.
+- **Invoice business profile:** organization admins can update name, address,
+  contact information, tax ID, brand color, footer, bank details, and template
+  (`classic`, `modern`, or `minimal`) through `PATCH /api/v1/settings`. Upload
+  or remove a private PNG/JPEG logo with `POST`/`DELETE /api/v1/settings/logo`.
+  These values are included in invoice PDFs. Apply migration `0011`.
+- **Account deletion:** `DELETE /api/v1/auth/me` requires the current password.
+  It removes the user's account and owned organizations' data, but refuses
+  when an owned organization has other members. Transfer ownership or remove
+  those members first. Deleting an organization also removes its receipt/logo
+  objects.
