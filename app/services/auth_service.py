@@ -1,12 +1,15 @@
+import logging
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.services.account_service import AccountService
 from app.core.exceptions import AccountLockedError, ConflictError, UnauthorizedError
 from app.core.security import (
     create_access_token,
     create_refresh_token,
     hash_password,
+    token_issued_before,
     verify_password,
 )
 from app.integrations import login_lockout
@@ -16,6 +19,8 @@ from app.repositories.organization_repository import OrganizationRepository
 from app.repositories.expense_repository import ExpenseCategoryRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.auth import AuthResponse, OrganizationOut, UserOut
+
+logger = logging.getLogger(__name__)
 
 
 class AuthService:
@@ -43,6 +48,12 @@ class AuthService:
             entity_type="user", entity_id=user.id, ip_address=ip_address,
         )
         await self.db.commit()
+
+        try:
+            await AccountService(self.db).send_verification_email(user=user)
+        except Exception:
+            await self.db.rollback()
+            logger.exception("Could not send verification email after registration")
 
         return self._build_auth_response(user, [(org, "owner")])
 
@@ -80,17 +91,17 @@ class AuthService:
 
         return self._build_auth_response(user, orgs_with_role)
 
-    async def refresh(self, user_id: UUID) -> tuple[AuthResponse, str]:
-        """Called after the refresh token has already been verified by the route
-        (signature + type + not-revoked). Issues a fresh access/refresh pair."""
+    async def refresh(self, user_id: UUID, token_payload: dict | None = None) -> tuple[AuthResponse, str]:
+        
         user = await self.users.get_by_id(user_id)
         if not user or not user.is_active:
+            raise UnauthorizedError("Session is no longer valid.", error_code="INVALID_SESSION")
+        if token_payload is not None and token_issued_before(token_payload, user.password_changed_at):
             raise UnauthorizedError("Session is no longer valid.", error_code="INVALID_SESSION")
 
         memberships = await self.orgs.list_for_user(user.id)
         orgs_with_role = [(org, member.role.value) for org, member in memberships]
         return self._build_auth_response(user, orgs_with_role)
-
     def _build_auth_response(self, user: User, orgs_with_role: list[tuple]) -> tuple[AuthResponse, str]:
         access_token = create_access_token(user.id)
         refresh_token = create_refresh_token(user.id)
