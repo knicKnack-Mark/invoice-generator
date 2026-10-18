@@ -1,5 +1,8 @@
+import base64
 import logging
 from abc import ABC, abstractmethod
+
+import httpx
 
 from app.core.config import settings
 
@@ -24,8 +27,7 @@ class EmailBackend(ABC):
 
 
 class ConsoleEmailBackend(EmailBackend):
-    """Dev backend: prints the email instead of sending it. Swap for an SES /
-    Resend / Postmark / SMTP backend later; callers don't change."""
+    """Development backend that prints email content instead of sending it."""
 
     async def send(self, *, to: str, subject: str, html_body: str, attachments=None) -> None:
         if settings.environment == "development":
@@ -36,12 +38,53 @@ class ConsoleEmailBackend(EmailBackend):
             logger.warning("EMAIL_BACKEND=console outside development: email to %s (%r) was NOT sent.", to, subject)
 
 
+class ResendEmailBackend(EmailBackend):
+    """Email delivery through the Resend HTTP API."""
+
+    endpoint = "https://api.resend.com/emails"
+
+    def __init__(self, *, api_key: str, from_address: str):
+        self.api_key = api_key
+        self.from_address = from_address
+
+    async def send(self, *, to: str, subject: str, html_body: str, attachments=None) -> None:
+        payload = {
+            "from": self.from_address,
+            "to": [to],
+            "subject": subject,
+            "html": html_body,
+        }
+        if attachments:
+            payload["attachments"] = [
+                {
+                    "filename": filename,
+                    "content": base64.b64encode(content).decode("ascii"),
+                    "content_type": mime_type,
+                }
+                for filename, content, mime_type in attachments
+            ]
+
+        async with httpx.AsyncClient(timeout=20) as client:
+            response = await client.post(
+                self.endpoint,
+                json=payload,
+                headers={"Authorization": f"Bearer {self.api_key}"},
+            )
+            response.raise_for_status()
+
+
 def get_email_backend() -> EmailBackend:
     if settings.email_backend == "console":
         return ConsoleEmailBackend()
+    if settings.email_backend == "resend":
+        if not settings.resend_api_key:
+            raise RuntimeError("RESEND_API_KEY is required when EMAIL_BACKEND=resend.")
+        return ResendEmailBackend(
+            api_key=settings.resend_api_key,
+            from_address=settings.email_from_address,
+        )
     raise NotImplementedError(
-        f"Email backend '{settings.email_backend}' is not implemented yet. "
-        "Add a class implementing EmailBackend and wire it in."
+        f"Email backend '{settings.email_backend}' is not supported. Choose 'console' or 'resend'."
     )
 
 
