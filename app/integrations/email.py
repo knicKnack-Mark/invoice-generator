@@ -24,7 +24,7 @@ if not logger.handlers:
 class EmailBackend(ABC):
     @abstractmethod
     async def send(
-        self, *, to: str, subject: str, html_body: str,
+        self, *, to: str, subject: str, html_body: str, from_name: str | None = None,
         attachments: list[tuple[str, bytes, str]] | None = None,
     ) -> None:
         """attachments: list of (filename, content, mime_type)."""
@@ -33,7 +33,10 @@ class EmailBackend(ABC):
 class ConsoleEmailBackend(EmailBackend):
     """Development backend that prints email content instead of sending it."""
 
-    async def send(self, *, to: str, subject: str, html_body: str, attachments=None) -> None:
+    async def send(
+        self, *, to: str, subject: str, html_body: str,
+        from_name: str | None = None, attachments=None,
+    ) -> None:
         if settings.environment == "development":
             names = [a[0] for a in (attachments or [])]
             logger.info("EMAIL (console backend) -> to=%s subject=%r attachments=%s\n%s", to, subject, names, html_body)
@@ -51,9 +54,12 @@ class ResendEmailBackend(EmailBackend):
         self.api_key = api_key
         self.from_address = from_address
 
-    async def send(self, *, to: str, subject: str, html_body: str, attachments=None) -> None:
+    async def send(
+        self, *, to: str, subject: str, html_body: str,
+        from_name: str | None = None, attachments=None,
+    ) -> None:
         payload = {
-            "from": self.from_address,
+            "from": formataddr((from_name, self.from_address)) if from_name else self.from_address,
             "to": [to],
             "subject": subject,
             "html": html_body,
@@ -87,9 +93,12 @@ class GmailEmailBackend(EmailBackend):
         self.email_address = email_address.strip()
         self.app_password = "".join(app_password.split())
 
-    async def send(self, *, to: str, subject: str, html_body: str, attachments=None) -> None:
+    async def send(
+        self, *, to: str, subject: str, html_body: str,
+        from_name: str | None = None, attachments=None,
+    ) -> None:
         message = EmailMessage()
-        message["From"] = formataddr((settings.app_name, self.email_address))
+        message["From"] = formataddr((from_name or settings.app_name, self.email_address))
         message["To"] = to
         message["Subject"] = subject
         message.set_content("This message contains HTML content. Please view it in an HTML-capable email client.")
