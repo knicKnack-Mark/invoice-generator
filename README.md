@@ -246,8 +246,11 @@ tenant isolation enforced at the repository layer on every query.
 ## Launch-readiness features
 
 - **Email:** set `EMAIL_BACKEND=resend`, `RESEND_API_KEY`, and a verified
-  `EMAIL_FROM_ADDRESS` to send verification, password-reset, and invoice emails
-  with Resend. `EMAIL_BACKEND=console` remains available for development.
+  `EMAIL_FROM_ADDRESS` to send with Resend, or set `EMAIL_BACKEND=gmail`,
+  `GMAIL_EMAIL`, and `GMAIL_APP_PASSWORD` to send through Gmail SMTP. Gmail
+  requires Google 2-Step Verification and an App Password; use the generated
+  App Password, never your regular Gmail password. `EMAIL_BACKEND=console`
+  remains available for development.
 - **Invoice business profile:** organization admins can update name, address,
   contact information, tax ID, brand color, footer, bank details, and template
   (`classic`, `modern`, or `minimal`) through `PATCH /api/v1/settings`. Upload
