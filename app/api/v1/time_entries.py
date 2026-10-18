@@ -85,7 +85,7 @@ async def update_time_entry(
 ):
     return await TimeEntryService(db).update(
         organization_id=membership.organization_id, entry_id=entry_id, payload=payload,
-        actor_user_id=current_user.id,
+        actor_user_id=current_user.id, actor_role=membership.role.value,
     )
 
 
@@ -97,6 +97,7 @@ async def delete_time_entry(
     db: AsyncSession = Depends(get_db),
 ):
     await TimeEntryService(db).delete(
-        organization_id=membership.organization_id, entry_id=entry_id, actor_user_id=current_user.id
+        organization_id=membership.organization_id, entry_id=entry_id, actor_user_id=current_user.id,
+        actor_role=membership.role.value,
     )
     return {"success": True, "data": {"message": "Time entry deleted."}}
