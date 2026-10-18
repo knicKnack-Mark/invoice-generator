@@ -61,6 +61,7 @@ class Settings(BaseSettings):
     # --- Invoices ---
     invoice_number_prefix: str = "INV"
     default_payment_terms_days: int = 15
+    invoice_reminder_offsets_days: str = "-7,0,7,14"
 
     # --- Account tokens (password reset / email verification) ---
     frontend_base_url: str = "http://localhost:3000"
@@ -75,6 +76,16 @@ class Settings(BaseSettings):
     @property
     def allowed_upload_mime_type_list(self) -> list[str]:
         return [t.strip() for t in self.allowed_upload_mime_types.split(",") if t.strip()]
+
+    @property
+    def invoice_reminder_day_offsets(self) -> list[int]:
+        try:
+            offsets = [int(value.strip()) for value in self.invoice_reminder_offsets_days.split(",") if value.strip()]
+        except ValueError as exc:
+            raise ValueError("INVOICE_REMINDER_OFFSETS_DAYS must be comma-separated integers.") from exc
+        if len(offsets) != len(set(offsets)):
+            raise ValueError("INVOICE_REMINDER_OFFSETS_DAYS cannot contain duplicate offsets.")
+        return offsets
 
 
 settings = Settings()
