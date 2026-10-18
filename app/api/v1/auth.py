@@ -21,6 +21,7 @@ from app.repositories.log_repository import LogRepository
 from app.schemas.auth import (
     AuthResponse,
     ChangePasswordRequest,
+    DeleteAccountRequest,
     ForgotPasswordRequest,
     LoginRequest,
     RegisterRequest,
@@ -177,6 +178,24 @@ async def change_password(
     # Every older session was just invalidated; give this one fresh tokens so the user stays logged in.
     _set_auth_cookies(response, create_access_token(current_user.id), create_refresh_token(current_user.id))
     return {"success": True, "data": {"message": "Password changed."}}
+
+@router.delete("/me")
+async def delete_account(
+    payload: DeleteAccountRequest,
+    request: Request,
+    response: Response,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await AccountService(db).delete_account(
+        user=current_user,
+        password=payload.password,
+        ip_address=_client_ip(request),
+    )
+    response.delete_cookie(ACCESS_COOKIE)
+    response.delete_cookie(REFRESH_COOKIE)
+    response.delete_cookie(CSRF_COOKIE_NAME)
+    return {"success": True, "data": {"message": "Account and eligible organization data deleted."}}
 
 
 @router.post("/verify-email/request")
