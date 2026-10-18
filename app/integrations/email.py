@@ -1,6 +1,10 @@
+import asyncio
 import base64
 import logging
+import smtplib
 from abc import ABC, abstractmethod
+from email.message import EmailMessage
+from email.utils import formataddr
 
 import httpx
 
@@ -73,6 +77,43 @@ class ResendEmailBackend(EmailBackend):
             response.raise_for_status()
 
 
+class GmailEmailBackend(EmailBackend):
+    """Email delivery through Gmail's authenticated SMTP service."""
+
+    host = "smtp.gmail.com"
+    port = 465
+
+    def __init__(self, *, email_address: str, app_password: str):
+        self.email_address = email_address.strip()
+        self.app_password = "".join(app_password.split())
+
+    async def send(self, *, to: str, subject: str, html_body: str, attachments=None) -> None:
+        message = EmailMessage()
+        message["From"] = formataddr((settings.app_name, self.email_address))
+        message["To"] = to
+        message["Subject"] = subject
+        message.set_content("This message contains HTML content. Please view it in an HTML-capable email client.")
+        message.add_alternative(html_body, subtype="html")
+
+        for filename, content, mime_type in attachments or []:
+            maintype, separator, subtype = mime_type.partition("/")
+            if not separator:
+                maintype, subtype = "application", "octet-stream"
+            message.add_attachment(
+                content,
+                maintype=maintype,
+                subtype=subtype,
+                filename=filename,
+            )
+
+        await asyncio.to_thread(self._send_message, message)
+
+    def _send_message(self, message: EmailMessage) -> None:
+        with smtplib.SMTP_SSL(self.host, self.port, timeout=20) as smtp:
+            smtp.login(self.email_address, self.app_password)
+            smtp.send_message(message)
+
+
 def get_email_backend() -> EmailBackend:
     if settings.email_backend == "console":
         return ConsoleEmailBackend()
@@ -83,8 +124,17 @@ def get_email_backend() -> EmailBackend:
             api_key=settings.resend_api_key,
             from_address=settings.email_from_address,
         )
+    if settings.email_backend == "gmail":
+        if not settings.gmail_email or not settings.gmail_app_password:
+            raise RuntimeError(
+                "GMAIL_EMAIL and GMAIL_APP_PASSWORD are required when EMAIL_BACKEND=gmail."
+            )
+        return GmailEmailBackend(
+            email_address=settings.gmail_email,
+            app_password=settings.gmail_app_password,
+        )
     raise NotImplementedError(
-        f"Email backend '{settings.email_backend}' is not supported. Choose 'console' or 'resend'."
+        f"Email backend '{settings.email_backend}' is not supported. Choose 'console', 'resend', or 'gmail'."
     )
 
 
