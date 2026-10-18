@@ -9,6 +9,7 @@ from app.core.config import settings
 from app.core.exceptions import NotFoundError, ValidationAppError
 from app.integrations.email import email_backend
 from app.integrations.pdf import render_invoice_pdf
+from app.integrations.storage import storage_backend
 from app.models.expense import Expense, ExpenseStatus
 from app.models.invoice import Invoice, InvoiceStatus, VALID_INVOICE_TRANSITIONS
 from app.models.time_entry import TimeEntry
@@ -18,6 +19,7 @@ from app.repositories.log_repository import LogRepository
 from app.schemas.invoice import InvoiceCreate, InvoiceUpdate, PublicInvoiceOut
 from app.repositories.notification_repository import NotificationRepository
 from app.repositories.organization_repository import OrganizationRepository
+from app.repositories.settings_repository import SettingsRepository
 
 class InvoiceService:
     def __init__(self, db: AsyncSession):
@@ -27,6 +29,7 @@ class InvoiceService:
         self.logs = LogRepository(db)
         self.notifications = NotificationRepository(db)
         self.orgs = OrganizationRepository(db)
+        self.settings_repo = SettingsRepository(db)
     async def _load_and_validate_expenses(
         self, *, organization_id: UUID, client_id: UUID, expense_ids: list[UUID]
     ) -> list[Expense]:
@@ -290,20 +293,45 @@ class InvoiceService:
         return await self.get(organization_id=organization_id, invoice_id=invoice_id)
 
     async def send(self, *, organization_id: UUID, invoice_id: UUID, actor_user_id: UUID) -> Invoice:
-        invoice = await self.change_status(
-            organization_id=organization_id, invoice_id=invoice_id, new_status="sent", actor_user_id=actor_user_id
+        invoice = await self.get(organization_id=organization_id, invoice_id=invoice_id)
+        target = InvoiceStatus.sent
+        if target not in VALID_INVOICE_TRANSITIONS.get(invoice.status, set()):
+            raise ValidationAppError(
+                f"Cannot move invoice from '{invoice.status.value}' to '{target.value}'.",
+                error_code="INVALID_STATUS_TRANSITION",
+            )
+        client_email = await self.repo.get_client_email(
+            organization_id=organization_id, client_id=invoice.client_id
         )
+        if not client_email:
+            raise ValidationAppError(
+                "Add an email address to this client before sending an invoice.",
+                error_code="CLIENT_EMAIL_REQUIRED",
+            )
         client_name = await self.repo.get_client_name(client_id=invoice.client_id) or "Client"
-        pdf_bytes = render_invoice_pdf(invoice=invoice, client_name=client_name)
-        # In dev this just logs; swap EMAIL_BACKEND for a real provider to
-        # actually deliver it — no code here changes when that happens.
+        pdf_bytes = await self._render_invoice_pdf(
+            invoice=invoice,
+            organization_id=organization_id,
+            client_name=client_name,
+        )
+        previous_status = invoice.status
+        invoice = await self.repo.set_status(invoice, target)
+        await self.logs.record_activity(
+            organization_id=organization_id,
+            user_id=actor_user_id,
+            action="invoice.status_changed",
+            entity_type="invoice",
+            entity_id=invoice.id,
+            metadata={"from": previous_status.value, "to": target.value},
+        )
         await email_backend.send(
-            to="client@example.com",  # replace with the client's actual email once Client.email is loaded here
+            to=client_email,
             subject=f"Invoice {invoice.invoice_number}",
             html_body=f"<p>Please find attached invoice {invoice.invoice_number}, total {invoice.currency} {invoice.total}.</p>",
             attachments=[(f"{invoice.invoice_number}.pdf", pdf_bytes, "application/pdf")],
         )
-        return invoice
+        await self.db.commit()
+        return await self.get(organization_id=organization_id, invoice_id=invoice_id)
 
     async def delete(self, *, organization_id: UUID, invoice_id: UUID, actor_user_id: UUID) -> None:
         invoice = await self.get(organization_id=organization_id, invoice_id=invoice_id)
@@ -320,4 +348,24 @@ class InvoiceService:
     async def get_pdf_bytes(self, *, organization_id: UUID, invoice_id: UUID) -> bytes:
         invoice = await self.get(organization_id=organization_id, invoice_id=invoice_id)
         client_name = await self.repo.get_client_name(client_id=invoice.client_id) or ""
-        return render_invoice_pdf(invoice=invoice, client_name=client_name)
+        return await self._render_invoice_pdf(
+            invoice=invoice,
+            organization_id=organization_id,
+            client_name=client_name,
+        )
+
+    async def _render_invoice_pdf(
+        self, *, invoice: Invoice, organization_id: UUID, client_name: str
+    ) -> bytes:
+        profile = await self.settings_repo.get(organization_id=organization_id)
+        organization_name = await self.repo.get_organization_name(organization_id=organization_id) or "Business"
+        logo_bytes = None
+        if profile and profile.logo_key:
+            logo_bytes = await storage_backend.read(key=profile.logo_key)
+        return render_invoice_pdf(
+            invoice=invoice,
+            client_name=client_name,
+            organization_name=organization_name,
+            profile=profile,
+            logo_bytes=logo_bytes,
+        )

@@ -11,6 +11,7 @@ from app.core.config import settings
 from app.models.client import Client
 from app.models.invoice import Invoice, InvoiceExpense, InvoiceItem, InvoiceStatus, InvoiceTimeEntry
 from app.models.organization import Organization
+from app.models.settings import OrganizationSettings
 
 
 class InvoiceRepository:
@@ -29,6 +30,16 @@ class InvoiceRepository:
         result = await self.db.execute(select(Client.name).where(Client.id == client_id))
         return result.scalar_one_or_none()
 
+    async def get_client_email(self, *, organization_id: UUID, client_id: UUID) -> str | None:
+        result = await self.db.execute(
+            select(Client.email).where(
+                Client.id == client_id,
+                Client.organization_id == organization_id,
+                Client.deleted_at.is_(None),
+            )
+        )
+        return result.scalar_one_or_none()
+
     async def get_organization_name(self, *, organization_id: UUID) -> str | None:
         result = await self.db.execute(select(Organization.name).where(Organization.id == organization_id))
         return result.scalar_one_or_none()
@@ -38,7 +49,13 @@ class InvoiceRepository:
         Counts existing invoices for this org+year rather than a separate
         counter table — simple and correct as long as invoices are only
         ever created through this method (never bulk-inserted directly)."""
-        prefix = f"{settings.invoice_number_prefix}-{year}-"
+        result = await self.db.execute(
+            select(OrganizationSettings.invoice_prefix).where(
+                OrganizationSettings.organization_id == organization_id
+            )
+        )
+        prefix_value = result.scalar_one_or_none() or settings.invoice_number_prefix
+        prefix = f"{prefix_value}-{year}-"
         result = await self.db.execute(
             select(func.count())
             .select_from(Invoice)

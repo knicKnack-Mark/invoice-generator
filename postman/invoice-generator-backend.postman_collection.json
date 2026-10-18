@@ -1,0 +1,3331 @@
+{
+  "info": {
+    "name": "Invoice Generator Backend API",
+    "description": "Complete Postman collection generated from the backend OpenAPI schema. Default baseUrl targets local development (http://localhost:8000). Do not point this collection at production unless you intend to make real changes. Auth uses access/refresh cookies captured by the collection scripts; CSRF is echoed on write requests. Start with Register, then GET Organizations if organization_id was not automatically captured. Resource IDs are captured from successful create requests. For real email, use an inbox you control and set reset_token/verification_token from delivered messages. Run migrations through the documented CLI before using Settings/Profile requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "health",
+      "item": [
+        {
+          "name": "GET Health",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "health"
+              ]
+            },
+            "description": "Health"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Health Db",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/health/db",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "health",
+                "db"
+              ]
+            },
+            "description": "Health Db"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Ping",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ping",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ping"
+              ]
+            },
+            "description": "Unauthenticated, unrestricted endpoint for the frontend to check that\nit can reach the backend at all (network/CORS sanity check) — separate\nfrom /health/db, which also proves the database connection works."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "auth",
+      "item": [
+        {
+          "name": "POST Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"full_name\": \"Demo VA\",\n  \"organization_name\": \"Demo VA Business\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST Refresh",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "Refresh"
+          },
+          "response": []
+        },
+        {
+          "name": "POST Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Logout"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Me"
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE Delete Account",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "IRREVERSIBLE: permanently deletes this user and all eligible owned-organization data. Use only on a disposable account after confirming the organization has no other members.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/forgot-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "forgot-password"
+              ]
+            },
+            "description": "Forgot Password",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/reset-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "reset-password"
+              ]
+            },
+            "description": "Reset Password",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{reset_token}}\",\n  \"new_password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/change-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "change-password"
+              ]
+            },
+            "description": "Change Password",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"{{password}}\",\n  \"new_password\": \"{{new_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST Request Email Verification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/verify-email/request",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "verify-email",
+                "request"
+              ]
+            },
+            "description": "Request Email Verification"
+          },
+          "response": []
+        },
+        {
+          "name": "POST Confirm Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/verify-email/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "verify-email",
+                "confirm"
+              ]
+            },
+            "description": "Confirm Email",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{verification_token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "organizations",
+      "item": [
+        {
+          "name": "GET List My Organizations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/organizations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "organizations"
+              ]
+            },
+            "description": "List My Organizations"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "clients",
+      "item": [
+        {
+          "name": "POST Create Client",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/clients",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "clients"
+              ]
+            },
+            "description": "Create Client",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Example Client\",\n  \"email\": \"client@example.test\",\n  \"currency\": \"USD\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET List Clients",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/clients",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "clients"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "page_size",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "List Clients"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Get Client",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/clients/{{client_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "clients",
+                ":client_id"
+              ]
+            },
+            "description": "Get Client"
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH Update Client",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/clients/{{client_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "clients",
+                ":client_id"
+              ]
+            },
+            "description": "Update Client",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Client Name\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE Delete Client",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/clients/{{client_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "clients",
+                ":client_id"
+              ]
+            },
+            "description": "Delete Client"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "projects",
+      "item": [
+        {
+          "name": "POST Create Project",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "projects"
+              ]
+            },
+            "description": "Create Project",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Example Project\",\n  \"client_id\": \"{{client_id}}\",\n  \"billing_type\": \"hourly\",\n  \"hourly_rate\": 75,\n  \"currency\": \"USD\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET List Projects",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "projects"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "page_size",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "client_id",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "List Projects"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Get Project",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/{{project_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "projects",
+                ":project_id"
+              ]
+            },
+            "description": "Get Project"
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH Update Project",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/{{project_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "projects",
+                ":project_id"
+              ]
+            },
+            "description": "Update Project",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Project\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE Delete Project",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/{{project_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "projects",
+                ":project_id"
+              ]
+            },
+            "description": "Delete Project"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "expense-categories",
+      "item": [
+        {
+          "name": "GET List Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/expense-categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "expense-categories"
+              ]
+            },
+            "description": "List Categories"
+          },
+          "response": []
+        },
+        {
+          "name": "POST Create Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/expense-categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "expense-categories"
+              ]
+            },
+            "description": "Create Category",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Software\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "expenses",
+      "item": [
+        {
+          "name": "POST Create Expense",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/expenses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "expenses"
+              ]
+            },
+            "description": "Create Expense",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"client_id\": \"{{client_id}}\",\n  \"project_id\": \"{{project_id}}\",\n  \"amount\": 25.5,\n  \"currency\": \"USD\",\n  \"expense_date\": \"{{today}}\",\n  \"description\": \"Example software subscription\",\n  \"billable\": true,\n  \"reimbursable\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET List Expenses",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/expenses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "expenses"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "page_size",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "client_id",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "project_id",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "category_id",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "billable",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "reimbursable",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "currency",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "date_from",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "date_to",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "List Expenses"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Unbilled Expenses",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/expenses/unbilled",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "expenses",
+                "unbilled"
+              ],
+              "query": [
+                {
+                  "key": "client_id",
+                  "value": "",
+                  "disabled": false,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Unbilled Expenses"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Get Expense",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/expenses/{{expense_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "expenses",
+                ":expense_id"
+              ]
+            },
+            "description": "Get Expense"
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH Update Expense",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/expenses/{{expense_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "expenses",
+                ":expense_id"
+              ]
+            },
+            "description": "Update Expense",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated expense description\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE Delete Expense",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/expenses/{{expense_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "expenses",
+                ":expense_id"
+              ]
+            },
+            "description": "Delete Expense"
+          },
+          "response": []
+        },
+        {
+          "name": "POST Change Expense Status",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/expenses/{{expense_id}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "expenses",
+                ":expense_id",
+                "status"
+              ]
+            },
+            "description": "Change Expense Status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"pending\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST Duplicate Expense",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/expenses/{{expense_id}}/duplicate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "expenses",
+                ":expense_id",
+                "duplicate"
+              ]
+            },
+            "description": "Duplicate Expense"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "receipts",
+      "item": [
+        {
+          "name": "POST Upload Receipt",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/expenses/{{expense_id}}/receipts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "expenses",
+                ":expense_id",
+                "receipts"
+              ]
+            },
+            "description": "Upload Receipt",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "Choose a local file in Postman. Receipts accept configured MIME types; logos accept PNG/JPEG."
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET List Receipts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/expenses/{{expense_id}}/receipts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "expenses",
+                ":expense_id",
+                "receipts"
+              ]
+            },
+            "description": "List Receipts"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Download Receipt File",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/receipts/{{receipt_id}}/file",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "receipts",
+                ":receipt_id",
+                "file"
+              ]
+            },
+            "description": "Streams the file back after the same tenant check as every other\nendpoint — receipts are never served from a public static path."
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH Update Receipt Metadata",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/receipts/{{receipt_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "receipts",
+                ":receipt_id"
+              ]
+            },
+            "description": "Update Receipt Metadata",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vendor\": \"Example Vendor\",\n  \"receipt_date\": \"{{today}}\",\n  \"amount\": 25.5,\n  \"currency\": \"USD\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE Delete Receipt",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/receipts/{{receipt_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "receipts",
+                ":receipt_id"
+              ]
+            },
+            "description": "Delete Receipt"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "invoices",
+      "item": [
+        {
+          "name": "POST Create Invoice",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/invoices",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "invoices"
+              ]
+            },
+            "description": "Create Invoice",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"client_id\": \"{{client_id}}\",\n  \"invoice_date\": \"{{today}}\",\n  \"currency\": \"USD\",\n  \"items\": [\n    {\n      \"description\": \"Consulting services\",\n      \"quantity\": 1,\n      \"unit_price\": 500,\n      \"discount\": 0,\n      \"tax\": 0\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET List Invoices",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/invoices",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "invoices"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "page_size",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "client_id",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "date_from",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "date_to",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "List Invoices"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Get Invoice",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/invoices/{{invoice_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "invoices",
+                ":invoice_id"
+              ]
+            },
+            "description": "Get Invoice"
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH Update Invoice",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/invoices/{{invoice_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "invoices",
+                ":invoice_id"
+              ]
+            },
+            "description": "Update Invoice",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Thank you for your business.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE Delete Invoice",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/invoices/{{invoice_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "invoices",
+                ":invoice_id"
+              ]
+            },
+            "description": "Delete Invoice"
+          },
+          "response": []
+        },
+        {
+          "name": "POST Change Invoice Status",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/invoices/{{invoice_id}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "invoices",
+                ":invoice_id",
+                "status"
+              ]
+            },
+            "description": "Change Invoice Status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"sent\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST Send Invoice",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/invoices/{{invoice_id}}/send",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "invoices",
+                ":invoice_id",
+                "send"
+              ]
+            },
+            "description": "Send Invoice"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Download Invoice Pdf",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/invoices/{{invoice_id}}/pdf",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "invoices",
+                ":invoice_id",
+                "pdf"
+              ]
+            },
+            "description": "Download Invoice Pdf"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "payments",
+      "item": [
+        {
+          "name": "POST Record Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/invoices/{{invoice_id}}/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "invoices",
+                ":invoice_id",
+                "payments"
+              ]
+            },
+            "description": "Record Payment",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100,\n  \"currency\": \"USD\",\n  \"payment_date\": \"{{today}}\",\n  \"payment_method\": \"bank_transfer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET List Payments For Invoice",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/invoices/{{invoice_id}}/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "invoices",
+                ":invoice_id",
+                "payments"
+              ]
+            },
+            "description": "List Payments For Invoice"
+          },
+          "response": []
+        },
+        {
+          "name": "GET List Payments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payments"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "page_size",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "invoice_id",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "List Payments"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Get Payment",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payments/{{payment_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payments",
+                ":payment_id"
+              ]
+            },
+            "description": "Get Payment"
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE Delete Payment",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payments/{{payment_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payments",
+                ":payment_id"
+              ]
+            },
+            "description": "Delete Payment"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "dashboard",
+      "item": [
+        {
+          "name": "GET Get Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dashboard"
+              ]
+            },
+            "description": "Get Dashboard"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "time-entries",
+      "item": [
+        {
+          "name": "POST Create Time Entry",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/time-entries",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "time-entries"
+              ]
+            },
+            "description": "Create Time Entry",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"client_id\": \"{{client_id}}\",\n  \"project_id\": \"{{project_id}}\",\n  \"entry_date\": \"{{today}}\",\n  \"duration_minutes\": 60,\n  \"description\": \"Consulting work\",\n  \"hourly_rate\": 75,\n  \"billable\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET List Time Entries",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/time-entries",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "time-entries"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "page_size",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "client_id",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "project_id",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "billable",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "date_from",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "date_to",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "List Time Entries"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Unbilled Time Entries",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/time-entries/unbilled",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "time-entries",
+                "unbilled"
+              ],
+              "query": [
+                {
+                  "key": "client_id",
+                  "value": "",
+                  "disabled": false,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Unbilled Time Entries"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Get Time Entry",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/time-entries/{{entry_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "time-entries",
+                ":entry_id"
+              ]
+            },
+            "description": "Get Time Entry"
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH Update Time Entry",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/time-entries/{{entry_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "time-entries",
+                ":entry_id"
+              ]
+            },
+            "description": "Update Time Entry",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated work description\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE Delete Time Entry",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/time-entries/{{entry_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "time-entries",
+                ":entry_id"
+              ]
+            },
+            "description": "Delete Time Entry"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "recurring-invoices",
+      "item": [
+        {
+          "name": "POST Create Recurring Invoice",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/recurring-invoices",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "recurring-invoices"
+              ]
+            },
+            "description": "Create Recurring Invoice",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"client_id\": \"{{client_id}}\",\n  \"frequency\": \"monthly\",\n  \"currency\": \"USD\",\n  \"payment_terms_days\": 15,\n  \"start_date\": \"{{today}}\",\n  \"items\": [\n    {\n      \"description\": \"Monthly service\",\n      \"quantity\": 1,\n      \"unit_price\": 500\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET List Recurring Invoices",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/recurring-invoices",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "recurring-invoices"
+              ],
+              "query": [
+                {
+                  "key": "is_active",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "List Recurring Invoices"
+          },
+          "response": []
+        },
+        {
+          "name": "POST Generate Due Recurring Invoices",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/recurring-invoices/generate-due",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "recurring-invoices",
+                "generate-due"
+              ]
+            },
+            "description": "Generate Due Recurring Invoices"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Get Recurring Invoice",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/recurring-invoices/{{recurring_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "recurring-invoices",
+                ":recurring_id"
+              ]
+            },
+            "description": "Get Recurring Invoice"
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH Update Recurring Invoice",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/recurring-invoices/{{recurring_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "recurring-invoices",
+                ":recurring_id"
+              ]
+            },
+            "description": "Update Recurring Invoice",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_active\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST Generate Recurring Invoice Now",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/recurring-invoices/{{recurring_id}}/generate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "recurring-invoices",
+                ":recurring_id",
+                "generate"
+              ]
+            },
+            "description": "Generate Recurring Invoice Now"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "notifications",
+      "item": [
+        {
+          "name": "GET List Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notifications"
+              ],
+              "query": [
+                {
+                  "key": "unread_only",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "List Notifications"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "settings",
+      "item": [
+        {
+          "name": "GET Get Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "settings"
+              ]
+            },
+            "description": "Get Settings"
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH Update Settings",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "settings"
+              ]
+            },
+            "description": "Update Settings",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"business_name\": \"Example VA Studio\",\n  \"business_address\": \"123 Example Street\\\\nCity, Country\",\n  \"business_email\": \"{{email}}\",\n  \"business_phone\": \"+1 555 0100\",\n  \"tax_id\": \"TAX-123\",\n  \"invoice_template\": \"classic\",\n  \"brand_color\": \"#315A7D\",\n  \"footer_text\": \"Thank you for your business.\",\n  \"bank_info\": {\n    \"bank_name\": \"Example Bank\",\n    \"account_name\": \"Example VA Studio\",\n    \"account_number\": \"000000000\",\n    \"routing_or_swift\": \"EXAMPUS0\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST Upload Business Logo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/settings/logo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "settings",
+                "logo"
+              ]
+            },
+            "description": "Upload Business Logo",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "Choose a local file in Postman. Receipts accept configured MIME types; logos accept PNG/JPEG."
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE Delete Business Logo",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/settings/logo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "settings",
+                "logo"
+              ]
+            },
+            "description": "Delete Business Logo"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "reports",
+      "item": [
+        {
+          "name": "GET Revenue Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reports/revenue",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "revenue"
+              ],
+              "query": [
+                {
+                  "key": "date_from",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "date_to",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Revenue Report"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Expense Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reports/expenses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "expenses"
+              ],
+              "query": [
+                {
+                  "key": "date_from",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "date_to",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Expense Report"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Outstanding Invoices Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reports/outstanding-invoices",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "outstanding-invoices"
+              ]
+            },
+            "description": "Outstanding Invoices Report"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Profitability Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reports/profitability",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "profitability"
+              ],
+              "query": [
+                {
+                  "key": "date_from",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "date_to",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Profitability Report"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Export Expenses Csv",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reports/export/expenses.csv",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "export",
+                "expenses.csv"
+              ],
+              "query": [
+                {
+                  "key": "date_from",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "date_to",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Export Expenses Csv"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Export Invoices Csv",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reports/export/invoices.csv",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "export",
+                "invoices.csv"
+              ],
+              "query": [
+                {
+                  "key": "date_from",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "date_to",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Export Invoices Csv"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Export Payments Csv",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Organization-Id",
+                "value": "{{organization_id}}",
+                "description": "Active tenant organization UUID."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reports/export/payments.csv",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reports",
+                "export",
+                "payments.csv"
+              ]
+            },
+            "description": "Export Payments Csv"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "public-invoices",
+      "item": [
+        {
+          "name": "GET View Public Invoice",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/invoice/public/{{public_token}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "invoice",
+                "public",
+                ":public_token"
+              ]
+            },
+            "description": "View Public Invoice"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Keep date-only API fields in YYYY-MM-DD format.",
+          "pm.collectionVariables.set('today', new Date().toISOString().slice(0, 10));",
+          "",
+          "// Reuse cookies returned by login/register/refresh and echo CSRF for writes.",
+          "const cookieParts = [];",
+          "['access_token', 'refresh_token', 'csrf_token'].forEach((name) => {",
+          "  const value = pm.collectionVariables.get(name);",
+          "  if (value) cookieParts.push(`${name}=${value}`);",
+          "});",
+          "if (cookieParts.length) pm.request.headers.upsert({ key: 'Cookie', value: cookieParts.join('; ') });",
+          "if (!['GET', 'HEAD', 'OPTIONS'].includes(pm.request.method.toUpperCase())) {",
+          "  const csrf = pm.collectionVariables.get('csrf_token');",
+          "  if (csrf) pm.request.headers.upsert({ key: 'X-CSRF-Token', value: csrf });",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Persist auth cookies and IDs so requests can be chained in Postman.",
+          "(function captureResponse() {",
+          "  pm.response.headers.all().forEach((header) => {",
+          "    if (header.key.toLowerCase() !== 'set-cookie') return;",
+          "    const match = header.value.match(/^([^=;]+)=([^;]*)/);",
+          "    if (!match) return;",
+          "    const name = match[1];",
+          "    if (!['access_token', 'refresh_token', 'csrf_token'].includes(name)) return;",
+          "    const deleted = /max-age=0/i.test(header.value) || /expires=Thu, 01 Jan 1970/i.test(header.value);",
+          "    pm.collectionVariables.set(name, deleted ? '' : match[2]);",
+          "  });",
+          "",
+          "  if (pm.response.code < 400) {",
+          "    let data;",
+          "    try {",
+          "      const responseBody = pm.response.json();",
+          "      data = responseBody && responseBody.data !== undefined ? responseBody.data : responseBody;",
+          "    } catch (_) {",
+          "      return;",
+          "    }",
+          "    const path = pm.request.url.getPath();",
+          "    if (path.endsWith('/auth/register') && data && Array.isArray(data.organizations) && data.organizations[0]) {",
+          "      pm.collectionVariables.set('organization_id', data.organizations[0].id || '');",
+          "    }",
+          "    if (path.endsWith('/organizations') && Array.isArray(data) && data[0]) {",
+          "      pm.collectionVariables.set('organization_id', data[0].id || '');",
+          "    }",
+          "    const captures = [",
+          "      ['/clients', 'client_id'], ['/projects', 'project_id'],",
+          "      ['/expense-categories', 'category_id'], ['/expenses', 'expense_id'],",
+          "      ['/receipts', 'receipt_id'], ['/invoices', 'invoice_id'],",
+          "      ['/payments', 'payment_id'], ['/time-entries', 'entry_id'],",
+          "      ['/recurring-invoices', 'recurring_id'],",
+          "    ];",
+          "    const method = pm.request.method.toUpperCase();",
+          "    if (method === 'POST') {",
+          "      captures.forEach(([suffix, variable]) => {",
+          "        if (path === `/api/v1${suffix}` || path.includes(`/api/v1${suffix}/`) && suffix === '/receipts') {",
+          "          if (data && data.id) pm.collectionVariables.set(variable, data.id);",
+          "          if (variable === 'invoice_id' && data && data.public_token) {",
+          "            pm.collectionVariables.set('public_token', data.public_token);",
+          "          }",
+          "        }",
+          "      });",
+          "      if (/^\\/api\\/v1\\/invoices\\/[^/]+\\/payments$/.test(path) && data && data.id) {",
+          "        pm.collectionVariables.set('payment_id', data.id);",
+          "      }",
+          "      if (/^\\/api\\/v1\\/expenses\\/[^/]+\\/receipts$/.test(path) && data && data.id) {",
+          "        pm.collectionVariables.set('receipt_id', data.id);",
+          "      }",
+          "    }",
+          "  }",
+          "})();"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000",
+      "description": "Backend base URL. Keep this local until deliberately configuring another environment."
+    },
+    {
+      "key": "email",
+      "value": "va@example.test",
+      "description": "Use an inbox you control when testing real email delivery."
+    },
+    {
+      "key": "password",
+      "value": "ChangeMe123!",
+      "description": "Demo-only account password; change it before registering."
+    },
+    {
+      "key": "new_password",
+      "value": "ChangeMe456!",
+      "description": "Demo-only new password."
+    },
+    {
+      "key": "organization_id",
+      "value": "",
+      "description": "Set from the register response or GET organizations."
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "description": "Captured from auth Set-Cookie response."
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "description": "Captured from auth Set-Cookie response."
+    },
+    {
+      "key": "csrf_token",
+      "value": "",
+      "description": "Captured from auth Set-Cookie response."
+    },
+    {
+      "key": "client_id",
+      "value": "",
+      "description": "Captured after creating a client."
+    },
+    {
+      "key": "project_id",
+      "value": "",
+      "description": "Captured after creating a project."
+    },
+    {
+      "key": "category_id",
+      "value": "",
+      "description": "Captured after creating an expense category."
+    },
+    {
+      "key": "expense_id",
+      "value": "",
+      "description": "Captured after creating an expense."
+    },
+    {
+      "key": "receipt_id",
+      "value": "",
+      "description": "Captured after uploading a receipt."
+    },
+    {
+      "key": "invoice_id",
+      "value": "",
+      "description": "Captured after creating an invoice."
+    },
+    {
+      "key": "payment_id",
+      "value": "",
+      "description": "Captured after recording a payment."
+    },
+    {
+      "key": "entry_id",
+      "value": "",
+      "description": "Captured after creating a time entry."
+    },
+    {
+      "key": "recurring_id",
+      "value": "",
+      "description": "Captured after creating a recurring invoice."
+    },
+    {
+      "key": "public_token",
+      "value": "",
+      "description": "Captured from the created invoice response if public links are enabled."
+    },
+    {
+      "key": "reset_token",
+      "value": "",
+      "description": "Set from your password-reset email during manual testing."
+    },
+    {
+      "key": "verification_token",
+      "value": "",
+      "description": "Set from your verification email during manual testing."
+    },
+    {
+      "key": "today",
+      "value": "2026-10-18",
+      "description": "Updated automatically by collection pre-request script."
+    }
+  ]
+}

@@ -5,14 +5,21 @@ from datetime import datetime, timedelta, timezone
 from html import escape
 from uuid import UUID
 
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.exceptions import AppError
+from app.core.exceptions import AppError, ConflictError, UnauthorizedError
 from app.core.security import hash_password, verify_password
 from app.integrations import login_lockout
 from app.integrations.email import email_backend
+from app.integrations.storage import storage_backend
 from app.models.auth_token import PURPOSE_EMAIL_VERIFICATION, PURPOSE_PASSWORD_RESET
+from app.models.expense import Expense
+from app.models.invoice import Invoice, InvoiceExpense, InvoiceTimeEntry
+from app.models.organization import Organization, OrganizationMember, OrgRole
+from app.models.receipt import ExpenseReceipt
+from app.models.settings import OrganizationSettings
 from app.models.user import User
 from app.repositories.auth_token_repository import AuthTokenRepository
 from app.repositories.log_repository import LogRepository
@@ -150,6 +157,88 @@ class AccountService:
         await self.db.commit()
         # The lockout message tells locked-out users to reset their password, so it should work.
         await login_lockout.clear_failed_attempts(user.email)
+
+    async def delete_account(
+        self, *, user: User, password: str, ip_address: str | None = None
+    ) -> None:
+        if not verify_password(password, user.password_hash):
+            raise UnauthorizedError("Password is incorrect.", error_code="INVALID_PASSWORD")
+
+        result = await self.db.execute(
+            select(OrganizationMember).where(OrganizationMember.user_id == user.id)
+        )
+        memberships = list(result.scalars().all())
+        owned_org_ids = [
+            membership.organization_id
+            for membership in memberships
+            if membership.role == OrgRole.owner
+        ]
+
+        if owned_org_ids:
+            # Prevent concurrent membership inserts while validating ownership.
+            await self.db.execute(
+                select(Organization.id)
+                .where(Organization.id.in_(owned_org_ids))
+                .with_for_update()
+            )
+            await self.db.execute(
+                select(OrganizationMember.id)
+                .where(OrganizationMember.organization_id.in_(owned_org_ids))
+                .with_for_update()
+            )
+
+        for organization_id in owned_org_ids:
+            result = await self.db.execute(
+                select(func.count())
+                .select_from(OrganizationMember)
+                .where(
+                    OrganizationMember.organization_id == organization_id,
+                    OrganizationMember.user_id != user.id,
+                )
+            )
+            if result.scalar_one() > 0:
+                raise ConflictError(
+                    "Transfer ownership or remove other organization members before deleting this account.",
+                    error_code="ORGANIZATION_HAS_OTHER_MEMBERS",
+                )
+
+        if owned_org_ids:
+            receipt_result = await self.db.execute(
+                select(ExpenseReceipt.file_key)
+                .join(Expense, ExpenseReceipt.expense_id == Expense.id)
+                .where(Expense.organization_id.in_(owned_org_ids))
+            )
+            logo_result = await self.db.execute(
+                select(OrganizationSettings.logo_key).where(
+                    OrganizationSettings.organization_id.in_(owned_org_ids),
+                    OrganizationSettings.logo_key.is_not(None),
+                )
+            )
+            file_keys = list(receipt_result.scalars().all()) + list(logo_result.scalars().all())
+
+            # Object storage and PostgreSQL cannot share a transaction. Remove
+            # private files first so account deletion cannot leave accessible data behind.
+            for file_key in file_keys:
+                await storage_backend.delete(key=file_key)
+
+            invoice_ids = select(Invoice.id).where(Invoice.organization_id.in_(owned_org_ids))
+            await self.db.execute(delete(InvoiceExpense).where(InvoiceExpense.invoice_id.in_(invoice_ids)))
+            await self.db.execute(delete(InvoiceTimeEntry).where(InvoiceTimeEntry.invoice_id.in_(invoice_ids)))
+            await self.db.execute(
+                delete(Organization).where(Organization.id.in_(owned_org_ids))
+            )
+
+        await self.logs.record_audit(
+            organization_id=None,
+            user_id=user.id,
+            action="user.account_deleted",
+            entity_type="user",
+            entity_id=user.id,
+            ip_address=ip_address,
+            metadata={"deleted_organization_count": len(owned_org_ids)},
+        )
+        await self.db.execute(delete(User).where(User.id == user.id))
+        await self.db.commit()
 
     # ---- change password (logged in) ----
 
