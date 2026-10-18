@@ -21,6 +21,29 @@
 5. Open http://localhost:8000/docs — try `GET /api/v1/health/db` first to
    confirm the Supabase connection, then `POST /api/v1/auth/register`.
 
+## Automatic invoice payment reminders
+
+Set `INVOICE_REMINDER_OFFSETS_DAYS` in `.env` to comma-separated day offsets
+from an invoice's due date. The default `-7,0,7,14` sends reminders 7 days
+before the due date, on the due date, and 7 and 14 days afterward. An empty
+value disables reminders. A reminder is sent only for unpaid invoices in
+`sent`, `viewed`, or `partially_paid` status, and the invoice PDF is attached.
+The database ledger prevents sending the same configured offset twice for an
+invoice. The job uses the machine's local date and should be run once daily;
+if a scheduled run is missed, that date's reminder is skipped.
+
+Apply migrations and run the job from the backend directory:
+
+```powershell
+alembic upgrade head
+python -m app.jobs.send_invoice_reminders
+```
+
+On Windows, create a Task Scheduler task that runs daily, with the backend
+directory as **Start in** and `python` as the program. Pass
+`-m app.jobs.send_invoice_reminders` as the arguments. Use the Python
+executable from the project's virtual environment if one is configured.
+
 ## What's included in this slice
 
 - `users`, `refresh_tokens`, `organizations`, `organization_members` tables
