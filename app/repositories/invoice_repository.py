@@ -30,9 +30,9 @@ class InvoiceRepository:
         result = await self.db.execute(select(Client.name).where(Client.id == client_id))
         return result.scalar_one_or_none()
 
-    async def get_client_email(self, *, organization_id: UUID, client_id: UUID) -> str | None:
+    async def get_client(self, *, organization_id: UUID, client_id: UUID) -> Client | None:
         result = await self.db.execute(
-            select(Client.email).where(
+            select(Client).where(
                 Client.id == client_id,
                 Client.organization_id == organization_id,
                 Client.deleted_at.is_(None),
