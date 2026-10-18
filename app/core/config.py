@@ -55,6 +55,8 @@ class Settings(BaseSettings):
     email_backend: str = "console"
     email_from_address: str = "billing@example.com"
     resend_api_key: str | None = None
+    gmail_email: str | None = None
+    gmail_app_password: str | None = None
 
     # --- Invoices ---
     invoice_number_prefix: str = "INV"
