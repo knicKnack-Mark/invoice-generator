@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, Field
-
+from datetime import datetime
 
 class RegisterRequest(BaseModel):
     email: EmailStr
