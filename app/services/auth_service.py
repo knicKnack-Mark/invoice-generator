@@ -1,9 +1,13 @@
 import logging
+from datetime import datetime, timedelta, timezone
+from hashlib import sha256
 from uuid import UUID
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.services.account_service import AccountService
+from app.core.config import settings
 from app.core.exceptions import AccountLockedError, ConflictError, UnauthorizedError
 from app.core.security import (
     create_access_token,
@@ -13,7 +17,7 @@ from app.core.security import (
     verify_password,
 )
 from app.integrations import login_lockout
-from app.models.user import User
+from app.models.user import RefreshToken, User
 from app.repositories.log_repository import LogRepository
 from app.repositories.organization_repository import OrganizationRepository
 from app.repositories.expense_repository import ExpenseCategoryRepository
@@ -55,7 +59,7 @@ class AuthService:
             await self.db.rollback()
             logger.exception("Could not send verification email after registration")
 
-        return self._build_auth_response(user, [(org, "owner")])
+        return await self._build_auth_response(user, [(org, "owner")])
 
     async def login(self, *, email: str, password: str, ip_address: str | None = None) -> tuple[AuthResponse, str]:
         if await login_lockout.is_locked_out(email):
@@ -89,22 +93,61 @@ class AuthService:
         )
         await self.db.commit()
 
-        return self._build_auth_response(user, orgs_with_role)
+        return await self._build_auth_response(user, orgs_with_role)
 
-    async def refresh(self, user_id: UUID, token_payload: dict | None = None) -> tuple[AuthResponse, str]:
-        
+    async def refresh(
+        self, user_id: UUID, *, refresh_token: str, token_payload: dict | None = None
+    ) -> tuple[AuthResponse, str]:
         user = await self.users.get_by_id(user_id)
         if not user or not user.is_active:
             raise UnauthorizedError("Session is no longer valid.", error_code="INVALID_SESSION")
         if token_payload is not None and token_issued_before(token_payload, user.password_changed_at):
             raise UnauthorizedError("Session is no longer valid.", error_code="INVALID_SESSION")
 
+        token_record = await self.db.scalar(
+            select(RefreshToken)
+            .where(RefreshToken.token_hash == self._hash_refresh_token(refresh_token))
+            .with_for_update()
+        )
+        now = datetime.now(timezone.utc)
+        if (
+            token_record is None
+            or token_record.user_id != user_id
+            or token_record.revoked
+            or token_record.expires_at <= now
+        ):
+            raise UnauthorizedError("Session is no longer valid.", error_code="INVALID_SESSION")
+        token_record.revoked = True
+
         memberships = await self.orgs.list_for_user(user.id)
         orgs_with_role = [(org, member.role.value) for org, member in memberships]
-        return self._build_auth_response(user, orgs_with_role)
-    def _build_auth_response(self, user: User, orgs_with_role: list[tuple]) -> tuple[AuthResponse, str]:
+        return await self._build_auth_response(user, orgs_with_role)
+
+    async def revoke_refresh_token(self, refresh_token: str) -> None:
+        token_record = await self.db.scalar(
+            select(RefreshToken).where(
+                RefreshToken.token_hash == self._hash_refresh_token(refresh_token)
+            )
+        )
+        if token_record and not token_record.revoked:
+            token_record.revoked = True
+            await self.db.commit()
+
+    async def _build_auth_response(
+        self, user: User, orgs_with_role: list[tuple]
+    ) -> tuple[AuthResponse, str]:
         access_token = create_access_token(user.id)
         refresh_token = create_refresh_token(user.id)
+        now = datetime.now(timezone.utc)
+        self.db.add(
+            RefreshToken(
+                user_id=user.id,
+                token_hash=self._hash_refresh_token(refresh_token),
+                expires_at=now + timedelta(days=settings.refresh_token_expire_days),
+                created_at=now,
+            )
+        )
+        await self.db.commit()
 
         response = AuthResponse(
             user=UserOut.model_validate(user),
@@ -115,3 +158,7 @@ class AuthService:
             access_token=access_token,
         )
         return response, refresh_token
+
+    @staticmethod
+    def _hash_refresh_token(token: str) -> str:
+        return sha256(token.encode("utf-8")).hexdigest()
