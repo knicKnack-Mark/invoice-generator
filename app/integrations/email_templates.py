@@ -1,3 +1,4 @@
+from datetime import date
 from html import escape
 from re import fullmatch
 
@@ -166,6 +167,68 @@ def invoice_email(
             {bank_rows}
             {f'<p style="margin:16px 0 0;color:#53615d;font-size:13px;line-height:1.6;">{escape(footer)}</p>' if footer else ''}
             <p style="margin:18px 0 0;color:#53615d;font-size:13px;line-height:1.6;">The invoice PDF is attached for your records. Please contact us if you have any questions.</p>
+          </td></tr>
+        </table>
+      </td></tr>
+    </table>
+  </body>
+</html>"""
+
+
+def invoice_reminder_email(*, invoice: Invoice, client: Client, organization_name: str, profile=None) -> str:
+    profile = profile or object()
+    business_name = getattr(profile, "business_name", None) or organization_name
+    brand_color = getattr(profile, "brand_color", None)
+    if not isinstance(brand_color, str) or not fullmatch(r"#[0-9A-Fa-f]{6}", brand_color):
+        brand_color = "#5b8f82"
+    days_overdue = (date.today() - invoice.due_date).days
+    if days_overdue < 0:
+        reminder_message = f"This is a friendly reminder that payment is due on {invoice.due_date.isoformat()}."
+    elif days_overdue == 0:
+        reminder_message = "This is a friendly reminder that payment is due today."
+    else:
+        reminder_message = (
+            f"Our records show a remaining balance on this invoice, which was due "
+            f"{days_overdue} day{'s' if days_overdue != 1 else ''} ago."
+        )
+
+    bank_info = getattr(profile, "bank_info", None) or {}
+    bank_labels = {
+        "bank_name": "Bank",
+        "account_name": "Account name",
+        "account_number": "Account number",
+        "routing_or_swift": "Routing / SWIFT",
+    }
+    bank_rows = "".join(
+        f'<p style="margin:4px 0;color:#53615d;font-size:13px;"><strong>{label}:</strong> {escape(str(bank_info[key]))}</p>'
+        for key, label in bank_labels.items()
+        if bank_info.get(key)
+    )
+    footer = getattr(profile, "footer_text", None)
+
+    return f"""\
+<!doctype html>
+<html lang="en">
+  <body style="margin:0;padding:0;background:#eef4f2;color:#26332f;font-family:Arial,Helvetica,sans-serif;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="padding:28px 12px;background:#eef4f2;">
+      <tr><td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border:1px solid #dce7e3;border-radius:8px;">
+          <tr><td style="padding:28px 32px;border-bottom:3px solid {brand_color};">
+            <p style="margin:0;color:{brand_color};font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Payment reminder</p>
+            <h1 style="margin:10px 0 0;color:#26332f;font-size:23px;">Invoice {escape(invoice.invoice_number)}</h1>
+          </td></tr>
+          <tr><td style="padding:26px 32px;">
+            <p style="margin:0 0 14px;color:#34413c;font-size:15px;">Hello {escape(client.name)},</p>
+            <p style="margin:0 0 20px;color:#53615d;font-size:14px;line-height:1.7;">{escape(reminder_message)}</p>
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f8f6;border:1px solid #e3ece8;">
+              <tr><td style="padding:13px;color:#53615d;font-size:13px;">Invoice number</td><td align="right" style="padding:13px;color:#26332f;font-size:13px;font-weight:700;">{escape(invoice.invoice_number)}</td></tr>
+              <tr><td style="padding:13px;border-top:1px solid #e3ece8;color:#53615d;font-size:13px;">Due date</td><td align="right" style="padding:13px;border-top:1px solid #e3ece8;color:#26332f;font-size:13px;">{invoice.due_date.isoformat()}</td></tr>
+              <tr><td style="padding:13px;border-top:1px solid #e3ece8;color:#53615d;font-size:13px;">Remaining balance</td><td align="right" style="padding:13px;border-top:1px solid #e3ece8;color:{brand_color};font-size:16px;font-weight:700;">{escape(invoice.currency)} {invoice.balance_due:,.2f}</td></tr>
+            </table>
+            {bank_rows}
+            <p style="margin:20px 0 0;color:#53615d;font-size:14px;line-height:1.7;">The invoice PDF is attached for your reference. If you have already made this payment, please disregard this reminder. If you have questions, reply to this email and we’ll be happy to help.</p>
+            {f'<p style="margin:16px 0 0;color:#53615d;font-size:13px;line-height:1.6;">{escape(footer)}</p>' if footer else ''}
+            <p style="margin:20px 0 0;color:#34413c;font-size:14px;">Kind regards,<br><strong>{escape(business_name)}</strong></p>
           </td></tr>
         </table>
       </td></tr>
